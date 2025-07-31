@@ -2,13 +2,13 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
   "manifestVersion": "1.16",
   "version": "1.0.0",
-  "id": "indici-mcp-chatbot-app",
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "packageName": "com.indici.mcp.chatbot",
   "developer": {
     "name": "Indici",
     "websiteUrl": "https://indici.com",
-    "privacyUrl": "http://0.0.0.0:10000/teams/privacy",
-    "termsOfUseUrl": "http://0.0.0.0:10000/teams/terms"
+    "privacyUrl": "https://indici-reports-assistant.onrender.com/teams/privacy",
+    "termsOfUseUrl": "https://indici-reports-assistant.onrender.com/teams/terms"
   },
   "icons": {
     "color": "color.png",
@@ -25,7 +25,7 @@
   "accentColor": "#2563eb",
   "configurableTabs": [
     {
-      "configurationUrl": "http://0.0.0.0:10000/teams/config",
+      "configurationUrl": "https://indici-reports-assistant.onrender.com/teams/config",
       "scopes": [
         "team",
         "groupchat"
@@ -43,10 +43,10 @@
     {
       "entityId": "indici-reports-assistant",
       "name": "Reports Assistant",
-      "contentUrl": "http://0.0.0.0:10000/teams",
-      "websiteUrl": "http://0.0.0.0:10000",
+      "contentUrl": "https://indici-reports-assistant.onrender.com/teams",
+      "websiteUrl": "https://indici-reports-assistant.onrender.com",
       "scopes": [
-        "personal"
+        "personal","team"
       ]
     }
   ],
@@ -55,11 +55,7 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "0.0.0.0:10000",
-    "localhost:10000"
-  ],
-  "webApplicationInfo": {
-    "id": "indici-mcp-chatbot-app",
-    "resource": "http://0.0.0.0:10000"
-  }
+    "indici-reports-assistant.onrender.com"
+  ]
+ 
 }
