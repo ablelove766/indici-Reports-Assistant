@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import json
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 from flask_socketio import SocketIO, emit
 from datetime import datetime
 import sys
@@ -27,11 +27,49 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'indici-mcp-chatbot-secret-key'
 
-# Initialize SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+# Initialize SocketIO with Teams-compatible CORS
+socketio = SocketIO(app, cors_allowed_origins=[
+    "https://teams.microsoft.com",
+    "https://*.teams.microsoft.com",
+    "https://teams.live.com",
+    "https://*.teams.live.com",
+    "http://localhost:*",
+    "http://0.0.0.0:*"
+], async_mode='threading')
 
 # Store active sessions
 active_sessions = {}
+
+# Teams-compatible CSP headers
+def add_teams_headers(response):
+    """Add headers required for Microsoft Teams integration."""
+    # Content Security Policy for Teams iframe embedding
+    csp_policy = (
+        "default-src 'self' https://teams.microsoft.com https://*.teams.microsoft.com "
+        "https://teams.live.com https://*.teams.live.com; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net "
+        "https://cdnjs.cloudflare.com https://teams.microsoft.com https://*.teams.microsoft.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
+        "https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' wss: ws: https://teams.microsoft.com https://*.teams.microsoft.com; "
+        "frame-ancestors https://teams.microsoft.com https://*.teams.microsoft.com "
+        "https://teams.live.com https://*.teams.live.com; "
+        "frame-src 'self' https://teams.microsoft.com https://*.teams.microsoft.com;"
+    )
+
+    response.headers['Content-Security-Policy'] = csp_policy
+    response.headers['X-Frame-Options'] = 'ALLOWALL'  # Allow iframe embedding
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
+    return response
+
+@app.after_request
+def after_request(response):
+    """Add security headers to all responses."""
+    return add_teams_headers(response)
 
 # Initialize MCP client connection
 def init_mcp_client():
@@ -52,7 +90,29 @@ init_mcp_client()
 @app.route('/')
 def index():
     """Main chat interface."""
-    return render_template('index.html')
+    # Check if running in Teams context
+    teams_context = request.args.get('teams', 'false').lower() == 'true'
+    return render_template('index.html', teams_mode=teams_context)
+
+@app.route('/teams')
+def teams_tab():
+    """Microsoft Teams tab interface."""
+    return render_template('index.html', teams_mode=True)
+
+@app.route('/teams/config')
+def teams_config():
+    """Teams tab configuration page."""
+    return render_template('teams_config.html')
+
+@app.route('/teams/privacy')
+def teams_privacy():
+    """Teams privacy policy page."""
+    return render_template('teams_privacy.html')
+
+@app.route('/teams/terms')
+def teams_terms():
+    """Teams terms of use page."""
+    return render_template('teams_terms.html')
 
 @app.route('/api/health')
 def health_check():
@@ -320,7 +380,8 @@ if __name__ == '__main__':
     logger.info(f"Host: {config.web_interface_host}")
     logger.info(f"Port: {config.web_interface_port}")
     logger.info(f"Debug: {config.web_interface_debug}")
-    
+    port = int(os.environ.get("PORT", 10000))  # Use PORT if defined, fallback to 5000
+    app.run(host="0.0.0.0", port=port, debug=True)
     # Start the web application
     socketio.run(
         app,

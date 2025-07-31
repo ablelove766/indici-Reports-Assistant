@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indici Reports Assistant - Teams Configuration</title>
+    <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f3f2f1;
+            color: #323130;
+        }
+        .config-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            color: #2563eb;
+            font-size: 2rem;
+            margin: 0;
+        }
+        .logo p {
+            color: #605e5c;
+            margin: 5px 0 0 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #323130;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d2d0ce;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .description {
+            color: #605e5c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .feature-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .feature-list h3 {
+            margin-top: 0;
+            color: #2563eb;
+        }
+        .feature-list ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .feature-list li {
+            margin: 8px 0;
+            color: #323130;
+        }
+        .buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 24px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="config-container">
+        <div class="logo">
+            <h1>📊 Indici</h1>
+            <p>Reports Assistant Configuration</p>
+        </div>
+
+        <div class="feature-list">
+            <h3>🚀 What you'll get:</h3>
+            <ul>
+                <li>🤖 AI-powered natural language queries for healthcare reports</li>
+                <li>📈 Provider capitation report generation and analysis</li>
+                <li>💬 Intelligent conversation interface with context awareness</li>
+                <li>🔍 Advanced filtering by provider, date range, and location</li>
+                <li>📊 Real-time data visualization and summaries</li>
+                <li>🏥 Healthcare-specific analytics and insights</li>
+            </ul>
+        </div>
+
+        <form id="configForm">
+            <div class="form-group">
+                <label for="tabName">Tab Name</label>
+                <input type="text" id="tabName" value="Indici Reports" maxlength="16">
+                <div class="description">Choose a name for this tab (max 16 characters)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="defaultView">Default View</label>
+                <select id="defaultView">
+                    <option value="full">Full Interface (Recommended)</option>
+                    <option value="compact">Compact View</option>
+                    <option value="chat-only">Chat Only</option>
+                </select>
+                <div class="description">Select the default interface layout</div>
+            </div>
+
+            <div class="form-group">
+                <label for="practiceId">Default Practice ID (Optional)</label>
+                <input type="number" id="practiceId" placeholder="e.g., 128">
+                <div class="description">Set a default practice ID for faster queries</div>
+            </div>
+        </form>
+
+        <div class="buttons">
+            <button class="btn btn-secondary" onclick="cancelConfig()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveConfig()">Save & Add Tab</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Microsoft Teams SDK
+        microsoftTeams.app.initialize();
+
+        function saveConfig() {
+            const tabName = document.getElementById('tabName').value || 'Indici Reports';
+            const defaultView = document.getElementById('defaultView').value;
+            const practiceId = document.getElementById('practiceId').value;
+
+            // Build the content URL with configuration parameters
+            let contentUrl = `${window.location.origin}/teams?view=${defaultView}`;
+            if (practiceId) {
+                contentUrl += `&practiceId=${practiceId}`;
+            }
+
+            // Configure the tab
+            microsoftTeams.pages.config.setConfig({
+                entityId: `indici-reports-${Date.now()}`,
+                contentUrl: contentUrl,
+                suggestedDisplayName: tabName,
+                websiteUrl: `${window.location.origin}`,
+                removeUrl: `${window.location.origin}/teams/remove`
+            });
+
+            // Notify Teams that configuration is valid
+            microsoftTeams.pages.config.setValidityState(true);
+        }
+
+        function cancelConfig() {
+            // Notify Teams to cancel configuration
+            microsoftTeams.pages.config.setValidityState(false);
+        }
+
+        // Enable save button when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            microsoftTeams.pages.config.setValidityState(true);
+            
+            // Register save handler
+            microsoftTeams.pages.config.registerOnSaveHandler(function(saveEvent) {
+                saveConfig();
+                saveEvent.notifySuccess();
+            });
+        });
+    </script>
+</body>
+</html>

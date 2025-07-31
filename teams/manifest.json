@@ -1,0 +1,65 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "indici-mcp-chatbot-app",
+  "packageName": "com.indici.mcp.chatbot",
+  "developer": {
+    "name": "Indici",
+    "websiteUrl": "https://indici.com",
+    "privacyUrl": "http://0.0.0.0:10000/teams/privacy",
+    "termsOfUseUrl": "http://0.0.0.0:10000/teams/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Indici Reports Assistant",
+    "full": "Indici MCP Reports Assistant - AI-Powered Healthcare Analytics"
+  },
+  "description": {
+    "short": "AI-powered assistant for healthcare provider capitation reports and analytics",
+    "full": "The Indici Reports Assistant is an intelligent chatbot that helps healthcare professionals generate, analyze, and understand provider capitation reports. Powered by advanced AI and integrated with the Indici API, it provides natural language querying capabilities for complex healthcare data analysis."
+  },
+  "accentColor": "#2563eb",
+  "configurableTabs": [
+    {
+      "configurationUrl": "http://0.0.0.0:10000/teams/config",
+      "scopes": [
+        "team",
+        "groupchat"
+      ],
+      "canUpdateConfiguration": true,
+      "context": [
+        "channelTab",
+        "privateChatTab",
+        "meetingChatTab",
+        "meetingDetailsTab"
+      ]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "indici-reports-assistant",
+      "name": "Reports Assistant",
+      "contentUrl": "http://0.0.0.0:10000/teams",
+      "websiteUrl": "http://0.0.0.0:10000",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "0.0.0.0:10000",
+    "localhost:10000"
+  ],
+  "webApplicationInfo": {
+    "id": "indici-mcp-chatbot-app",
+    "resource": "http://0.0.0.0:10000"
+  }
+}

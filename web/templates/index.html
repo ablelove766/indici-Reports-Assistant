@@ -8,9 +8,37 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    {% if teams_mode %}
+    <!-- Microsoft Teams SDK -->
+    <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+    <style>
+        /* Teams-specific styles */
+        body.teams-mode {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .teams-mode .app-container {
+            height: 100vh;
+            width: 100vw;
+        }
+        .teams-mode .sidebar {
+            width: 280px; /* Slightly narrower for Teams */
+        }
+        .teams-mode .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+        /* Hide elements that don't work well in Teams iframe */
+        .teams-mode .sidebar-toggle {
+            display: none;
+        }
+    </style>
+    {% endif %}
 </head>
-<body>
-    <div class="app-container">
+<body{% if teams_mode %} class="teams-mode"{% endif %}>
+    <div class="app-container"{% if teams_mode %} data-teams-mode="true"{% endif %}>
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
@@ -120,5 +148,54 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    {% if teams_mode %}
+    <!-- Teams-specific initialization -->
+    <script>
+        // Initialize Microsoft Teams SDK
+        if (typeof microsoftTeams !== 'undefined') {
+            microsoftTeams.app.initialize().then(() => {
+                console.log('Teams SDK initialized successfully');
+
+                // Get Teams context
+                microsoftTeams.app.getContext().then((context) => {
+                    console.log('Teams context:', context);
+
+                    // Store Teams context for use in the app
+                    window.teamsContext = context;
+
+                    // Notify Teams that the app is ready
+                    microsoftTeams.app.notifyAppLoaded();
+                    microsoftTeams.app.notifySuccess();
+
+                    // Apply Teams theme if available
+                    if (context.app && context.app.theme) {
+                        document.body.setAttribute('data-teams-theme', context.app.theme);
+                    }
+                }).catch((error) => {
+                    console.error('Failed to get Teams context:', error);
+                });
+            }).catch((error) => {
+                console.error('Failed to initialize Teams SDK:', error);
+            });
+        } else {
+            console.warn('Teams SDK not available - running in standalone mode');
+        }
+
+        // Teams-specific event handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adjust layout for Teams
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer && appContainer.dataset.teamsMode === 'true') {
+                // Additional Teams-specific initialization
+                console.log('Running in Teams mode');
+
+                // Hide elements that don't work well in Teams
+                const elementsToHide = document.querySelectorAll('.teams-hide');
+                elementsToHide.forEach(el => el.style.display = 'none');
+            }
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

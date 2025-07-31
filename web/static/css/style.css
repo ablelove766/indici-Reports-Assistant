@@ -72,6 +72,36 @@ body {
     overflow: hidden;
 }
 
+/* Teams-specific styles */
+body.teams-mode {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-primary);
+}
+
+body[data-teams-theme="dark"] {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+}
+
+body[data-teams-theme="dark"] .app-container {
+    background-color: var(--dark-bg-primary);
+}
+
+body[data-teams-theme="dark"] .main-content {
+    background-color: var(--dark-bg-secondary);
+}
+
+body[data-teams-theme="dark"] .chat-message.user {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--dark-text-primary);
+}
+
+body[data-teams-theme="dark"] .chat-message.assistant {
+    background-color: var(--primary-color);
+    color: white;
+}
+
 .app-container {
     display: flex;
     height: 100vh;
@@ -1071,4 +1101,65 @@ body {
 .header-btn[onclick="toggleSidebar()"]:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: scale(1.05);
+}
+
+/* Teams-specific responsive design */
+@media (max-width: 768px) {
+    .teams-mode .sidebar {
+        width: 100%;
+        position: absolute;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .teams-mode .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .teams-mode .main-content {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+/* Teams iframe optimizations */
+.teams-mode .app-container {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    height: 100vh;
+    max-height: 100vh;
+}
+
+.teams-mode .sidebar {
+    width: 280px; /* Optimized for Teams */
+    min-width: 280px;
+}
+
+.teams-mode .main-content {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Teams theme adaptations */
+.teams-mode .chat-input-container {
+    border-top: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+}
+
+body[data-teams-theme="dark"] .teams-mode .chat-input-container {
+    border-top-color: var(--dark-border);
+    background-color: var(--dark-bg-secondary);
+}
+
+body[data-teams-theme="dark"] .teams-mode #message-input {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+    color: var(--dark-text-primary);
+}
+
+body[data-teams-theme="dark"] .teams-mode #message-input::placeholder {
+    color: var(--dark-text-secondary);
 }
