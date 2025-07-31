@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>indici Reports Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>indici</h1>
+                </div>
+                <p class="subtitle">Reports Assistant</p>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="section">
+                    <h3><i class="fas fa-lightbulb"></i> Sample Queries</h3>
+                    <div id="sample-queries" class="sample-queries">
+                        <div class="loading">Loading samples...</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div id="sidebar-sections" class="sidebar-sections">
+                        <div class="loading">Loading menu...</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3><i class="fas fa-info-circle"></i> System Info</h3>
+                    <div id="system-info" class="system-info">
+                        <div class="loading">Loading system info...</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3><i class="fas fa-question-circle"></i> Help</h3>
+                    <div class="help-content">
+                        <p>Ask me to:</p>
+                        <ul>
+                            <li>Generate capitation reports</li>
+                            <li>Check service health</li>
+                            <li>Show sample queries</li>
+                            <li>Explain report data</li>
+                        </ul>
+                        <button class="action-btn help-btn" onclick="sendSampleQuery('help')">
+                            <i class="fas fa-question"></i>
+                            Get Help
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot" id="status-dot"></div>
+                    <span id="status-text">Connecting...</span>
+                </div>
+                <p class="version">v1.0.0</p>
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="main-content">
+            <div class="chat-header">
+                <div class="header-info">
+                    <h2><i class="fas fa-robot"></i> indici Reports Assistant</h2>
+                    <p>Your intelligent assistant for indici Reports</p>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="clearChat()" title="Clear Chat">
+                        <i class="fas fa-broom"></i>
+                    </button>
+                    <button class="header-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <!-- Messages will be added here dynamically -->
+                </div>
+                
+                <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span>Assistant is typing...</span>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <input type="text" id="message-input" placeholder="Ask me about indici Reports..." maxlength="500">
+                    <button id="send-button" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="input-footer">
+                    <span class="char-count">0/500</span>
+                    <span class="hint">Press Enter to send</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

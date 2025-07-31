@@ -1,0 +1,45 @@
+{
+  "model_selection": {
+    "use_groq": false,
+    "use_intent": false,
+    "use_qwen": true,
+    "fallback_order": ["qwen", "groq", "intent"]
+  },
+  
+  "sidebar_configuration": {
+    "enabled_sections": ["provider_capitation_queries"],
+    "provider_capitation_queries": {
+      "title": "Provider Capitation Queries",
+      "collapsible": true,
+      "expanded": true,
+      "icon": "📊",
+      "toggle_style": "checkmark",
+      "items": [
+        {
+          "id": "monthly_report",
+          "label": "Generate Monthly Report",
+          "query": "generate monthly provider capitation report",
+          "icon": "📊"
+        },
+        {
+          "id": "yearly_summary",
+          "label": "Yearly Summary",
+          "query": "generate yearly provider capitation summary",
+          "icon": "📈"
+        },
+        {
+          "id": "print_report",
+          "label": "Print Provider Report",
+          "query": "print provider capitation report",
+          "icon": "🖨️"
+        },
+        {
+          "id": "provider_list",
+          "label": "Provider List For Capitation",
+          "query": "show all providers for provider capitation report",
+          "icon": "👥"
+        }
+      ]
+    }
+  }
+}

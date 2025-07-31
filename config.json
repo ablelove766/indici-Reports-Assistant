@@ -1,0 +1,46 @@
+{
+  "groq": {
+    "api_key": "",
+    "model": "llama3-8b-8192",
+    "max_tokens": 1024,
+    "temperature": 0.7
+  },
+  "openrouter": {
+    "api_key": "",
+    "model": "qwen/qwen3-32b",
+    "max_tokens": 1024,
+    "temperature": 0.7,
+    "base_url": "https://openrouter.ai/api/v1"
+  },
+  "llm_features": {
+    "enable_llm_intent_detection": true,
+    "enable_llm_response_enhancement": true,
+    "fallback_to_rules": true,
+    "intent_detection_temperature": 0.1,
+    "response_enhancement_temperature": 0.3
+  },
+
+  "indici_api": {
+    "base_url": "http://localhost:5010",
+    "endpoints": {
+      "provider_capitation_report": "/api/Reports/ProviderCapitationReport",
+      "income_providers_report": "/api/Reports/GetAllIncomeProvidersForProviderCapitaionReport"
+    },
+    "timeout": 30
+  },
+  "mcp_server": {
+    "host": "localhost",
+    "port": 8000,
+    "name": "indici-reports-mcp",
+    "version": "1.0.0"
+  },
+  "web_interface": {
+    "host": "localhost",
+    "port": 5000,
+    "debug": true
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}
