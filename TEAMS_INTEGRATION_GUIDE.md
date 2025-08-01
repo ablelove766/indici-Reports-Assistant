@@ -33,24 +33,24 @@ Your Indici Reports Assistant is now fully configured for Microsoft Teams integr
 
 ## 🚀 Deployment Steps
 
-### Step 1: Update Your Domain
+### Step 1: ✅ Domain Already Updated
 
-Replace `0.0.0.0:10000` in `teams/manifest.json` with your actual domain:
+Your manifest has been updated for Render deployment:
 
 ```json
 {
   "developer": {
-    "privacyUrl": "https://your-domain.com/teams/privacy",
-    "termsOfUseUrl": "https://your-domain.com/teams/terms"
+    "privacyUrl": "https://indici-reports-assistant.onrender.com/teams/privacy",
+    "termsOfUseUrl": "https://indici-reports-assistant.onrender.com/teams/terms"
   },
   "configurableTabs": [{
-    "configurationUrl": "https://your-domain.com/teams/config"
+    "configurationUrl": "https://indici-reports-assistant.onrender.com/teams/config"
   }],
   "staticTabs": [{
-    "contentUrl": "https://your-domain.com/teams"
+    "contentUrl": "https://indici-reports-assistant.onrender.com/teams"
   }],
   "validDomains": [
-    "your-domain.com"
+    "indici-reports-assistant.onrender.com"
   ]
 }
 ```

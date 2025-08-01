@@ -33,6 +33,7 @@ socketio = SocketIO(app, cors_allowed_origins=[
     "https://*.teams.microsoft.com",
     "https://teams.live.com",
     "https://*.teams.live.com",
+    "https://indici-reports-assistant.onrender.com",
     "http://localhost:*",
     "http://0.0.0.0:*"
 ], async_mode='threading')
@@ -46,14 +47,16 @@ def add_teams_headers(response):
     # Content Security Policy for Teams iframe embedding
     csp_policy = (
         "default-src 'self' https://teams.microsoft.com https://*.teams.microsoft.com "
-        "https://teams.live.com https://*.teams.live.com; "
+        "https://teams.live.com https://*.teams.live.com https://indici-reports-assistant.onrender.com; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net "
-        "https://cdnjs.cloudflare.com https://teams.microsoft.com https://*.teams.microsoft.com; "
+        "https://cdnjs.cloudflare.com https://teams.microsoft.com https://*.teams.microsoft.com "
+        "https://res.cdn.office.net; "
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
         "https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' wss: ws: https://teams.microsoft.com https://*.teams.microsoft.com; "
+        "connect-src 'self' wss: ws: https://teams.microsoft.com https://*.teams.microsoft.com "
+        "wss://indici-reports-assistant.onrender.com https://indici-reports-assistant.onrender.com; "
         "frame-ancestors https://teams.microsoft.com https://*.teams.microsoft.com "
         "https://teams.live.com https://*.teams.live.com; "
         "frame-src 'self' https://teams.microsoft.com https://*.teams.microsoft.com;"
@@ -97,7 +100,16 @@ def index():
 @app.route('/teams')
 def teams_tab():
     """Microsoft Teams tab interface."""
-    return render_template('index.html', teams_mode=True)
+    # Get configuration parameters
+    view_mode = request.args.get('view', 'full')
+    responsive_mode = request.args.get('responsive', 'auto')
+    practice_id = request.args.get('practiceId', '')
+
+    return render_template('index.html',
+                         teams_mode=True,
+                         view_mode=view_mode,
+                         responsive_mode=responsive_mode,
+                         practice_id=practice_id)
 
 @app.route('/teams/config')
 def teams_config():

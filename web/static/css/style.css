@@ -1104,22 +1104,76 @@ body[data-teams-theme="dark"] .chat-message.assistant {
 }
 
 /* Teams-specific responsive design */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
     .teams-mode .sidebar {
-        width: 100%;
-        position: absolute;
-        z-index: 1000;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
+        width: 250px; /* Narrower for medium screens */
+    }
+}
+
+@media (max-width: 992px) {
+    .teams-mode .sidebar {
+        width: 220px; /* Even narrower for tablets */
     }
 
-    .teams-mode .sidebar.show {
-        transform: translateX(0);
+    .teams-mode .chat-message {
+        max-width: 85%; /* Adjust message width */
+    }
+}
+
+@media (max-width: 768px) {
+    .teams-mode .app-container {
+        flex-direction: column;
+    }
+
+    .teams-mode .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 40vh;
+        position: relative;
+        transform: none;
+        order: 2; /* Move sidebar below chat */
+        border-right: none;
+        border-top: 1px solid var(--border-color);
     }
 
     .teams-mode .main-content {
         width: 100%;
         margin-left: 0;
+        order: 1; /* Chat area on top */
+        flex: 1;
+        min-height: 60vh;
+    }
+
+    .teams-mode .sidebar-header {
+        padding: 10px 15px; /* Reduce padding */
+    }
+
+    .teams-mode .sidebar-content {
+        max-height: 30vh;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .teams-mode .sidebar {
+        max-height: 35vh;
+    }
+
+    .teams-mode .main-content {
+        min-height: 65vh;
+    }
+
+    .teams-mode .chat-message {
+        max-width: 90%;
+        font-size: 14px;
+    }
+
+    .teams-mode .chat-input-container {
+        padding: 10px;
+    }
+
+    .teams-mode #message-input {
+        font-size: 14px;
     }
 }
 
@@ -1130,17 +1184,70 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     box-shadow: none;
     height: 100vh;
     max-height: 100vh;
+    display: flex;
+    flex-direction: row;
 }
 
 .teams-mode .sidebar {
     width: 280px; /* Optimized for Teams */
     min-width: 280px;
+    flex-shrink: 0;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .teams-mode .main-content {
     flex: 1;
     min-width: 0;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Teams chat area optimizations */
+.teams-mode .chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    scroll-behavior: smooth;
+}
+
+.teams-mode .chat-input-container {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+    padding: 15px;
+}
+
+/* Teams header optimizations */
+.teams-mode .main-header {
+    flex-shrink: 0;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+}
+
+/* Teams scrollbar styling */
+.teams-mode .sidebar::-webkit-scrollbar,
+.teams-mode .chat-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.teams-mode .sidebar::-webkit-scrollbar-track,
+.teams-mode .chat-container::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+.teams-mode .sidebar::-webkit-scrollbar-thumb,
+.teams-mode .chat-container::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.teams-mode .sidebar::-webkit-scrollbar-thumb:hover,
+.teams-mode .chat-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
 
 /* Teams theme adaptations */
@@ -1162,4 +1269,80 @@ body[data-teams-theme="dark"] .teams-mode #message-input {
 
 body[data-teams-theme="dark"] .teams-mode #message-input::placeholder {
     color: var(--dark-text-secondary);
+}
+
+/* Teams view mode variations */
+.teams-mode.compact .sidebar {
+    width: 200px !important;
+    min-width: 200px !important;
+}
+
+.teams-mode.compact .chat-message {
+    font-size: 13px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+.teams-mode.compact .sidebar-header {
+    padding: 10px 15px;
+}
+
+.teams-mode.mobile-optimized .app-container {
+    flex-direction: column;
+}
+
+.teams-mode.mobile-optimized .sidebar {
+    width: 100% !important;
+    height: auto;
+    max-height: 35vh;
+    order: 2;
+    border-right: none;
+    border-top: 1px solid var(--border-color);
+}
+
+.teams-mode.mobile-optimized .main-content {
+    order: 1;
+    height: 65vh;
+    margin-left: 0 !important;
+}
+
+.teams-mode.chat-focused .sidebar {
+    width: 180px !important;
+    min-width: 180px !important;
+}
+
+.teams-mode.chat-focused .sidebar-content {
+    font-size: 12px;
+}
+
+/* Responsive mode overrides */
+.teams-mode.responsive-desktop .app-container {
+    flex-direction: row !important;
+}
+
+.teams-mode.responsive-desktop .sidebar {
+    width: 280px !important;
+    height: 100vh !important;
+    order: 1 !important;
+}
+
+.teams-mode.responsive-desktop .main-content {
+    order: 2 !important;
+    margin-left: 0 !important;
+}
+
+.teams-mode.responsive-mobile .app-container {
+    flex-direction: column !important;
+}
+
+.teams-mode.responsive-mobile .sidebar {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 40vh !important;
+    order: 2 !important;
+}
+
+.teams-mode.responsive-mobile .main-content {
+    order: 1 !important;
+    height: 60vh !important;
 }

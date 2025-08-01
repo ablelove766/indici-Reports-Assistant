@@ -139,10 +139,21 @@
                 <label for="defaultView">Default View</label>
                 <select id="defaultView">
                     <option value="full">Full Interface (Recommended)</option>
-                    <option value="compact">Compact View</option>
-                    <option value="chat-only">Chat Only</option>
+                    <option value="compact">Compact View (Better for small screens)</option>
+                    <option value="mobile-optimized">Mobile Optimized</option>
+                    <option value="chat-focused">Chat Focused (Minimal sidebar)</option>
                 </select>
-                <div class="description">Select the default interface layout</div>
+                <div class="description">Select the interface layout optimized for your Teams usage</div>
+            </div>
+
+            <div class="form-group">
+                <label for="responsiveMode">Responsive Behavior</label>
+                <select id="responsiveMode">
+                    <option value="auto">Auto-adapt to screen size</option>
+                    <option value="desktop">Always use desktop layout</option>
+                    <option value="mobile">Always use mobile layout</option>
+                </select>
+                <div class="description">How the interface should adapt to different screen sizes</div>
             </div>
 
             <div class="form-group">
@@ -165,10 +176,11 @@
         function saveConfig() {
             const tabName = document.getElementById('tabName').value || 'Indici Reports';
             const defaultView = document.getElementById('defaultView').value;
+            const responsiveMode = document.getElementById('responsiveMode').value;
             const practiceId = document.getElementById('practiceId').value;
 
             // Build the content URL with configuration parameters
-            let contentUrl = `${window.location.origin}/teams?view=${defaultView}`;
+            let contentUrl = `${window.location.origin}/teams?view=${defaultView}&responsive=${responsiveMode}`;
             if (practiceId) {
                 contentUrl += `&practiceId=${practiceId}`;
             }
