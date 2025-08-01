@@ -46,7 +46,7 @@
       "contentUrl": "https://indici-reports-assistant.onrender.com/teams",
       "websiteUrl": "https://indici-reports-assistant.onrender.com",
       "scopes": [
-        "personal","team"
+        "personal"
       ]
     }
   ],
