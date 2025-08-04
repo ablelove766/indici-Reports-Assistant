@@ -1,0 +1,330 @@
+/* Microsoft Teams Print Modal Styles */
+
+/* Teams Print Modal Window */
+#teams-print-modal {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Enhanced Table Styling for Teams Print */
+.teams-print-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    background: white;
+}
+
+.teams-print-content table thead {
+    background: linear-gradient(135deg, #6264a7, #5a5fc7);
+    color: white;
+}
+
+.teams-print-content table th {
+    padding: 15px 18px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 3px solid #4e54b8;
+    position: relative;
+}
+
+.teams-print-content table th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.teams-print-content table th:last-child {
+    border-top-right-radius: 10px;
+}
+
+.teams-print-content table td {
+    padding: 12px 18px;
+    border-bottom: 1px solid #e8e9ea;
+    background: white;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: background-color 0.2s ease;
+}
+
+.teams-print-content table tbody tr:nth-child(even) td {
+    background: #f8f9fa;
+}
+
+.teams-print-content table tbody tr:hover td {
+    background: #e3f2fd;
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.teams-print-content table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 10px;
+}
+
+.teams-print-content table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 10px;
+}
+
+/* Provider Section Styling */
+.teams-print-content .provider-section {
+    margin: 35px 0;
+    padding: 25px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fafafa, #f5f5f5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.teams-print-content .provider-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #6264a7, #5a5fc7);
+    border-radius: 12px 12px 0 0;
+}
+
+.teams-print-content .provider-section h3 {
+    margin: 0 0 20px 0;
+    color: #6264a7;
+    font-size: 22px;
+    font-weight: 700;
+    border-bottom: 2px solid #6264a7;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.teams-print-content .provider-section h3::before {
+    content: '👤';
+    font-size: 20px;
+}
+
+/* Total Amount Styling */
+.teams-print-content table td[style*="font-weight: bold"],
+.teams-print-content table td:contains("Total") {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+    font-weight: 700;
+    color: #1565c0;
+    border-top: 2px solid #6264a7;
+}
+
+/* Age Range Styling */
+.teams-print-content table td:first-child {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Amount Styling */
+.teams-print-content table td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: #2e7d32;
+}
+
+/* Print Header Enhancement */
+.teams-print-content .print-header {
+    text-align: center;
+    margin-bottom: 40px;
+    border-bottom: 4px solid #6264a7;
+    padding-bottom: 20px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.teams-print-content .print-header h1 {
+    margin: 0;
+    font-size: 32px;
+    color: #333;
+    font-weight: 800;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.teams-print-content .print-header h1::before {
+    content: '📊';
+    font-size: 28px;
+}
+
+.teams-print-content .print-header p {
+    margin: 15px 0 0 0;
+    color: #666;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Responsive Design for Teams */
+@media (max-width: 768px) {
+    #teams-print-modal {
+        padding: 10px;
+    }
+    
+    #teams-print-modal > div {
+        width: 95%;
+        max-height: 95%;
+    }
+    
+    .teams-print-content table {
+        font-size: 12px;
+    }
+    
+    .teams-print-content table th,
+    .teams-print-content table td {
+        padding: 8px 12px;
+    }
+    
+    .teams-print-content .provider-section {
+        padding: 15px;
+        margin: 20px 0;
+    }
+    
+    .teams-print-content .print-header h1 {
+        font-size: 24px;
+    }
+}
+
+/* Print-specific styles */
+@media print {
+    /* Hide all Teams UI elements */
+    body * {
+        visibility: hidden;
+    }
+    
+    /* Show only print modal content */
+    #teams-print-modal,
+    #teams-print-modal * {
+        visibility: visible;
+    }
+    
+    /* Reset modal positioning for print */
+    #teams-print-modal {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Reset modal window for print */
+    #teams-print-modal > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: white !important;
+    }
+    
+    /* Hide interactive elements */
+    #teams-print-modal button,
+    #teams-print-modal .print-controls,
+    .print-controls {
+        display: none !important;
+    }
+    
+    /* Optimize tables for print */
+    .teams-print-content table {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #333 !important;
+    }
+    
+    .teams-print-content table th {
+        background: #333 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .teams-print-content table td {
+        border: 1px solid #666 !important;
+    }
+    
+    /* Optimize provider sections for print */
+    .provider-section {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        border: 2px solid #333 !important;
+        background: white !important;
+        box-shadow: none !important;
+    }
+    
+    /* Print header optimization */
+    .teams-print-content .print-header {
+        border-bottom: 4px solid #333 !important;
+        background: white !important;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Ensure proper page breaks */
+    .teams-print-content .provider-section {
+        page-break-before: auto;
+        page-break-after: auto;
+        page-break-inside: avoid;
+    }
+    
+    /* Remove gradients and shadows for print */
+    * {
+        background-image: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+}
+
+/* Animation for modal appearance */
+@keyframes teamsModalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+#teams-print-modal > div {
+    animation: teamsModalFadeIn 0.3s ease-out;
+}
+
+/* Scrollbar styling for Teams */
+.teams-print-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.teams-print-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.teams-print-content::-webkit-scrollbar-thumb {
+    background: #6264a7;
+    border-radius: 4px;
+}
+
+.teams-print-content::-webkit-scrollbar-thumb:hover {
+    background: #5a5fc7;
+}

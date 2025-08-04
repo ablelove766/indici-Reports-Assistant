@@ -34,10 +34,14 @@ window.openPrintWindow = function(printContent) {
         return;
     }
 
-    // Check if we're in Teams environment
+    // Check if we're in Teams environment - Enhanced detection
     const isTeams = window.location.href.includes('/teams') ||
                    window.navigator.userAgent.includes('Teams') ||
-                   window.parent !== window;
+                   window.parent !== window ||
+                   navigator.userAgent.includes('Teams') ||
+                   navigator.userAgent.includes('MSTeams') ||
+                   window.location.hostname.includes('teams') ||
+                   (window.microsoftTeams && typeof window.microsoftTeams === 'object');
 
     if (isTeams) {
         // Teams-compatible print: Use current window with print styles
@@ -60,82 +64,305 @@ window.openPrintWindow = function(printContent) {
     }
 };
 
-// Teams-compatible inline print function
+// Teams-compatible modal print window function
 function createInlinePrintView(printContent) {
-    // Create overlay with print content
-    const printOverlay = document.createElement('div');
-    printOverlay.id = 'print-overlay';
-    printOverlay.style.cssText = `
+    console.log('🖨️ TEAMS: Creating Teams-compatible print modal window');
+
+    // Create modal overlay that looks like a separate window
+    const printModal = document.createElement('div');
+    printModal.id = 'teams-print-modal';
+    printModal.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: white;
-        z-index: 10000;
-        overflow: auto;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         padding: 20px;
         box-sizing: border-box;
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
     `;
 
-    printOverlay.innerHTML = `
-        <div class="print-container">
-            <div class="print-header">
-                <h2>Provider Capitation Report</h2>
+    // Create the modal window content
+    const modalWindow = document.createElement('div');
+    modalWindow.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 90%;
+        max-width: 900px;
+        max-height: 90%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        border: 1px solid #e0e0e0;
+    `;
+
+    // Create window header (like a browser window)
+    const windowHeader = document.createElement('div');
+    windowHeader.style.cssText = `
+        background: linear-gradient(135deg, #6264a7, #5a5fc7);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #e0e0e0;
+        border-radius: 12px 12px 0 0;
+        font-weight: 600;
+        font-size: 16px;
+    `;
+
+    windowHeader.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 12px; height: 12px; background: #ff5f57; border-radius: 50%;"></div>
+            <div style="width: 12px; height: 12px; background: #ffbd2e; border-radius: 50%;"></div>
+            <div style="width: 12px; height: 12px; background: #28ca42; border-radius: 50%;"></div>
+            <span style="margin-left: 15px;">🖨️ Provider Capitation Report - Print Preview</span>
+        </div>
+        <button onclick="closeTeamsPrintModal()" style="
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.2s;
+        " onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'">
+            ×
+        </button>
+    `;
+
+    // Create scrollable content area
+    const contentArea = document.createElement('div');
+    contentArea.style.cssText = `
+        flex: 1;
+        overflow-y: auto;
+        padding: 30px;
+        background: white;
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+    `;
+
+    contentArea.innerHTML = `
+        <div class="teams-print-content">
+            <div class="print-header" style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #6264a7; padding-bottom: 15px;">
+                <h1 style="margin: 0; font-size: 28px; color: #333; font-weight: 700;">Provider Capitation Report</h1>
+                <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">Generated on ${new Date().toLocaleDateString()}</p>
             </div>
-            ${printContent}
-            <div class="print-controls" style="text-align: center; margin: 20px 0; padding: 20px; border: 1px solid #ddd; background: #f8f9fa;">
-                <button onclick="window.print()" style="margin: 0 10px; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; background-color: #007bff; color: white;">
-                    🖨️ Print Report
-                </button>
-                <button onclick="closePrintOverlay()" style="margin: 0 10px; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; background-color: #6c757d; color: white;">
-                    ❌ Close
-                </button>
+            <div class="print-body">
+                ${printContent}
             </div>
         </div>
     `;
 
-    // Add print styles
-    const printStyles = document.createElement('style');
-    printStyles.innerHTML = `
+    // Create action buttons footer
+    const actionFooter = document.createElement('div');
+    actionFooter.style.cssText = `
+        background: #f8f9fa;
+        padding: 20px 30px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        border-radius: 0 0 12px 12px;
+    `;
+
+    actionFooter.innerHTML = `
+        <button onclick="printTeamsModal()" style="
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            transition: all 0.2s;
+        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 123, 255, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 123, 255, 0.3)'">
+            🖨️ Print Report
+        </button>
+        <button onclick="closeTeamsPrintModal()" style="
+            background: linear-gradient(135deg, #6c757d, #545b62);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+            transition: all 0.2s;
+        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(108, 117, 125, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(108, 117, 125, 0.3)'">
+            ❌ Close
+        </button>
+    `;
+
+    // Assemble the modal
+    modalWindow.appendChild(windowHeader);
+    modalWindow.appendChild(contentArea);
+    modalWindow.appendChild(actionFooter);
+    printModal.appendChild(modalWindow);
+
+    // Add Teams-specific print styles
+    const teamsModalPrintStyles = document.createElement('style');
+    teamsModalPrintStyles.id = 'teams-modal-print-styles';
+    teamsModalPrintStyles.innerHTML = `
+        /* Teams Modal Print Styles */
+        .teams-print-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .teams-print-content table th {
+            background: linear-gradient(135deg, #6264a7, #5a5fc7);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #4e54b8;
+        }
+
+        .teams-print-content table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .teams-print-content table tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+
+        .teams-print-content table tr:hover td {
+            background: #e3f2fd;
+        }
+
+        .teams-print-content .provider-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .teams-print-content .provider-section h3 {
+            margin: 0 0 15px 0;
+            color: #6264a7;
+            font-size: 20px;
+            font-weight: 700;
+            border-bottom: 2px solid #6264a7;
+            padding-bottom: 8px;
+        }
+
         @media print {
             body * {
                 visibility: hidden;
             }
-            #print-overlay, #print-overlay * {
+            #teams-print-modal, #teams-print-modal * {
                 visibility: visible;
             }
-            #print-overlay {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                padding: 0;
-                margin: 0;
+            #teams-print-modal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
             }
+            #teams-print-modal > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            #teams-print-modal .print-header {
+                border-bottom: 3px solid #333 !important;
+                margin-bottom: 20px !important;
+            }
+            #teams-print-modal button,
+            #teams-print-modal .print-controls,
             .print-controls {
                 display: none !important;
             }
+            .teams-print-content table {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .provider-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
         }
     `;
-    document.head.appendChild(printStyles);
+    document.head.appendChild(teamsModalPrintStyles);
 
-    // Add close function to global scope
-    window.closePrintOverlay = function() {
-        const overlay = document.getElementById('print-overlay');
-        if (overlay) {
-            overlay.remove();
+    // Add Teams modal functions to global scope
+    window.closeTeamsPrintModal = function() {
+        console.log('🖨️ TEAMS: Closing Teams print modal');
+        const modal = document.getElementById('teams-print-modal');
+        if (modal) {
+            modal.remove();
         }
         // Remove print styles
-        if (printStyles.parentNode) {
-            printStyles.parentNode.removeChild(printStyles);
+        const styles = document.getElementById('teams-modal-print-styles');
+        if (styles && styles.parentNode) {
+            styles.parentNode.removeChild(styles);
         }
-        delete window.closePrintOverlay;
+        delete window.closeTeamsPrintModal;
+        delete window.printTeamsModal;
     };
 
-    document.body.appendChild(printOverlay);
-    console.log('Inline print view created for Teams compatibility');
+    window.printTeamsModal = function() {
+        console.log('🖨️ TEAMS: Triggering print for Teams modal');
+        window.print();
+    };
+
+    // Add click outside to close
+    printModal.addEventListener('click', function(e) {
+        if (e.target === printModal) {
+            window.closeTeamsPrintModal();
+        }
+    });
+
+    // Add escape key to close
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.closeTeamsPrintModal();
+        }
+    });
+
+    document.body.appendChild(printModal);
+    console.log('✅ TEAMS: Teams-compatible print modal window created successfully');
 }
 
 // Regular popup window print function

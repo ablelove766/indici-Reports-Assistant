@@ -7,6 +7,7 @@
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///wA">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/teams-print.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -380,8 +381,8 @@
                     <button class="header-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <!-- Mobile Toggle Button - Bulletproof for Real Mobile Devices -->
-                    <button id="mobile-nav-toggle" class="mobile-nav-toggle" title="Toggle Navigation">
+                    <!-- Mobile Toggle Button - For Mobile Screens -->
+                    <button id="mobile-nav-toggle" class="mobile-nav-toggle" onclick="toggleMobileNav()" title="Toggle Navigation">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
@@ -424,6 +425,101 @@
 
     <!-- Direct sendMessage function - Always works -->
     <script>
+        // EMERGENCY: Define all functions immediately to prevent reference errors
+        window.toggleMobileNav = window.toggleMobileNav || function() {
+            console.log('🚨 EMERGENCY: toggleMobileNav called');
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                const isOpen = sidebar.classList.contains('mobile-open');
+                if (isOpen) {
+                    sidebar.classList.remove('mobile-open');
+                    console.log('🚨 EMERGENCY: Sidebar closed');
+                } else {
+                    sidebar.classList.add('mobile-open');
+                    console.log('🚨 EMERGENCY: Sidebar opened');
+                }
+            }
+        };
+
+        window.sendMessage = window.sendMessage || function() {
+            console.log('🚨 EMERGENCY: sendMessage called');
+            const messageInput = document.getElementById('message-input');
+            if (messageInput && messageInput.value.trim()) {
+                console.log('🚨 EMERGENCY: Message:', messageInput.value.trim());
+                if (window.chatApp && window.chatApp.sendMessage) {
+                    window.chatApp.sendMessage();
+                } else {
+                    console.log('🚨 EMERGENCY: ChatApp not available');
+                }
+            }
+        };
+
+        window.clearChat = window.clearChat || function() {
+            console.log('🚨 EMERGENCY: clearChat called');
+            const chatMessages = document.getElementById('chat-messages');
+            if (chatMessages) {
+                chatMessages.innerHTML = '';
+            }
+        };
+
+        window.exportChat = window.exportChat || function() {
+            console.log('🚨 EMERGENCY: exportChat called');
+        };
+
+        window.toggleSidebar = window.toggleSidebar || function() {
+            console.log('🚨 EMERGENCY: toggleSidebar called');
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('hidden');
+            }
+        };
+
+        window.closeMobileNav = window.closeMobileNav || function() {
+            console.log('🚨 EMERGENCY: closeMobileNav called');
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('mobile-open');
+            }
+        };
+
+        window.sendSampleQuery = window.sendSampleQuery || function(query) {
+            console.log('🚨 EMERGENCY: sendSampleQuery called with:', query);
+            const messageInput = document.getElementById('message-input');
+            if (messageInput) {
+                messageInput.value = query;
+                if (window.sendMessage) {
+                    window.sendMessage();
+                }
+            }
+        };
+
+        console.log('🚨 EMERGENCY: All functions defined to prevent reference errors');
+
+        // FIRST PRIORITY: toggleMobileNav function for HTML onclick
+        window.toggleMobileNav = function() {
+            console.log('🔄 PRIORITY: toggleMobileNav called from HTML onclick');
+            try {
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    const isOpen = sidebar.classList.contains('mobile-open');
+                    if (isOpen) {
+                        sidebar.classList.remove('mobile-open');
+                        sidebar.classList.add('mobile-hidden');
+                        console.log('✅ PRIORITY: Sidebar closed');
+                    } else {
+                        sidebar.classList.remove('mobile-hidden');
+                        sidebar.classList.add('mobile-open');
+                        console.log('✅ PRIORITY: Sidebar opened');
+                    }
+                } else {
+                    console.error('❌ PRIORITY: Sidebar not found');
+                }
+            } catch (error) {
+                console.error('❌ PRIORITY: Error in toggleMobileNav:', error);
+            }
+        };
+        console.log('✅ PRIORITY: toggleMobileNav function defined at top level');
+
         // Direct sendMessage function that always works
         window.sendMessage = function() {
             console.log('🔵 Direct sendMessage called');
@@ -463,10 +559,9 @@
                         if (chatMessages) {
                             const messageDiv = document.createElement('div');
                             messageDiv.className = 'message user chat';
-                            messageDiv.innerHTML = `
-                                <div class="avatar">👤</div>
-                                <div class="message-text">${message}</div>
-                            `;
+                            messageDiv.innerHTML =
+                                '<div class="avatar">👤</div>' +
+                                '<div class="message-text">' + message + '</div>';
                             chatMessages.appendChild(messageDiv);
                             chatMessages.scrollTop = chatMessages.scrollHeight;
                         }
@@ -486,10 +581,9 @@
                         if (chatMessages) {
                             const messageDiv = document.createElement('div');
                             messageDiv.className = 'message assistant chat';
-                            messageDiv.innerHTML = `
-                                <div class="avatar">🤖</div>
-                                <div class="message-text">${data.message}</div>
-                            `;
+                            messageDiv.innerHTML =
+                                '<div class="avatar">🤖</div>' +
+                                '<div class="message-text">' + (data.message || '') + '</div>';
                             chatMessages.appendChild(messageDiv);
                             chatMessages.scrollTop = chatMessages.scrollHeight;
                         }
@@ -564,6 +658,182 @@
         let sidebar = null;
         let overlay = null;
 
+        // IMMEDIATE: Simple toggleMobileNav function for HTML onclick
+        window.toggleMobileNav = function() {
+            console.log('🔄 IMMEDIATE: toggleMobileNav called from HTML');
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                const isOpen = sidebar.classList.contains('mobile-open');
+                if (isOpen) {
+                    sidebar.classList.remove('mobile-open');
+                    console.log('✅ IMMEDIATE: Sidebar closed');
+                } else {
+                    sidebar.classList.add('mobile-open');
+                    console.log('✅ IMMEDIATE: Sidebar opened');
+                }
+            } else {
+                console.error('❌ IMMEDIATE: Sidebar not found');
+            }
+        };
+
+        // ULTRA-AGGRESSIVE Teams mobile toggle handler - DEFINED FIRST TO AVOID REFERENCE ERROR
+        function handleTeamsMobileToggle() {
+            console.log('🔵 TEAMS MOBILE: ULTRA-AGGRESSIVE handleTeamsMobileToggle called');
+
+            try {
+                const sidebar = document.querySelector('.sidebar');
+                const mainContent = document.querySelector('.main-content');
+                const appContainer = document.querySelector('.app-container');
+                const mobileToggle = document.querySelector('.mobile-nav-toggle');
+                const toggleIcon = mobileToggle ? mobileToggle.querySelector('i') : null;
+
+                console.log('🔵 TEAMS MOBILE: Elements check:', {
+                    sidebar: !!sidebar,
+                    mainContent: !!mainContent,
+                    appContainer: !!appContainer,
+                    mobileToggle: !!mobileToggle,
+                    toggleIcon: !!toggleIcon,
+                    screenWidth: window.innerWidth,
+                    isMobile: window.innerWidth <= 768
+                });
+
+                if (!sidebar) {
+                    console.error('❌ TEAMS MOBILE: Sidebar not found');
+                    return;
+                }
+
+                const isCurrentlyOpen = sidebar.classList.contains('mobile-open');
+                console.log('🔵 TEAMS MOBILE: Current state:', isCurrentlyOpen ? 'OPEN' : 'CLOSED');
+                console.log('🔵 TEAMS MOBILE: Sidebar classes:', sidebar.className);
+
+                if (isCurrentlyOpen) {
+                    // CLOSE mobile nav
+                    console.log('🔄 TEAMS MOBILE: Closing mobile nav...');
+                    sidebar.classList.remove('mobile-open');
+                    sidebar.classList.add('mobile-hidden');
+
+                    if (toggleIcon) {
+                        toggleIcon.className = 'fas fa-bars';
+                    }
+
+                    // Reset body scroll
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('position');
+
+                    console.log('✅ TEAMS MOBILE: Mobile nav CLOSED');
+                } else {
+                    // OPEN mobile nav
+                    console.log('🔄 TEAMS MOBILE: Opening mobile nav...');
+                    sidebar.classList.remove('mobile-hidden');
+                    sidebar.classList.add('mobile-open');
+
+                    if (toggleIcon) {
+                        toggleIcon.className = 'fas fa-times';
+                    }
+
+                    // Prevent body scroll
+                    document.body.style.setProperty('overflow', 'hidden', 'important');
+                    document.body.style.setProperty('position', 'fixed', 'important');
+
+                    console.log('✅ TEAMS MOBILE: Mobile nav OPENED');
+                }
+
+                console.log('🎉 TEAMS MOBILE: handleTeamsMobileToggle completed successfully');
+
+            } catch (error) {
+                console.error('❌ TEAMS MOBILE: Error in handleTeamsMobileToggle:', error);
+                console.error('❌ TEAMS MOBILE: Error stack:', error.stack);
+            }
+        }
+
+        // Initialize Teams Navigation - DEFINED EARLY TO AVOID REFERENCE ERROR
+        function initializeTeamsNavigation() {
+            console.log('🔵 TEAMS MOBILE: Ultra-aggressive Teams mobile navigation initialization');
+            console.log('🔵 TEAMS MOBILE: User agent:', navigator.userAgent);
+            console.log('🔵 TEAMS MOBILE: Window size:', window.innerWidth + 'x' + window.innerHeight);
+            console.log('🔵 TEAMS MOBILE: Is Teams app:', navigator.userAgent.includes('Teams'));
+            console.log('🔵 TEAMS MOBILE: Is mobile:', window.innerWidth <= 768);
+            console.log('🔵 TEAMS MOBILE: Touch support:', 'ontouchstart' in window);
+
+            // ULTRA-AGGRESSIVE element finding with multiple attempts
+            let mobileToggle = null;
+            let attempts = 0;
+            const maxAttempts = 10;
+
+            function findMobileToggle() {
+                attempts++;
+                console.log(`🔵 TEAMS MOBILE: Attempt ${attempts}/${maxAttempts} to find mobile toggle`);
+
+                // Try multiple selectors
+                const selectors = [
+                    '.mobile-nav-toggle',
+                    '#mobile-nav-toggle',
+                    'button.mobile-nav-toggle',
+                    'button#mobile-nav-toggle',
+                    '[class*="mobile-nav-toggle"]',
+                    '[id*="mobile-nav-toggle"]'
+                ];
+
+                for (const selector of selectors) {
+                    mobileToggle = document.querySelector(selector);
+                    if (mobileToggle) {
+                        console.log(`🔵 TEAMS MOBILE: Found mobile toggle with selector: ${selector}`);
+                        break;
+                    }
+                }
+
+                if (mobileToggle) {
+                    console.log('🔵 TEAMS MOBILE: Mobile toggle found, setting up ultra-aggressive event handlers');
+
+                    // Remove any existing event listeners
+                    const newToggle = mobileToggle.cloneNode(true);
+                    mobileToggle.parentNode.replaceChild(newToggle, mobileToggle);
+                    mobileToggle = newToggle;
+
+                    // Add ultra-aggressive event handlers
+                    const events = ['click', 'touchstart', 'touchend', 'mousedown', 'mouseup'];
+
+                    events.forEach(eventType => {
+                        mobileToggle.addEventListener(eventType, function(e) {
+                            console.log(`🔵 TEAMS MOBILE: ${eventType} event triggered on mobile toggle`);
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            handleTeamsMobileToggle();
+                        }, { passive: false, capture: true });
+                    });
+
+                    // Also handle clicks on the icon inside the button
+                    const icon = mobileToggle.querySelector('i');
+                    if (icon) {
+                        events.forEach(eventType => {
+                            icon.addEventListener(eventType, function(e) {
+                                console.log(`🔵 TEAMS MOBILE: ${eventType} event on icon`);
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (sidebar.classList.contains('mobile-open')) {
+                                    handleTeamsMobileToggle();
+                                }
+                            }
+                        }, { passive: false, capture: true });
+                    });
+
+                    console.log('✅ TEAMS MOBILE: Ultra-aggressive navigation initialized successfully');
+                } else if (attempts < maxAttempts) {
+                    console.log(`🔵 TEAMS MOBILE: Mobile toggle not found, retrying in 500ms (attempt ${attempts}/${maxAttempts})`);
+                    setTimeout(findMobileToggle, 500);
+                } else {
+                    console.error('❌ TEAMS MOBILE: Failed to find mobile toggle after maximum attempts');
+                }
+            }
+
+            // Start the ultra-aggressive mobile toggle finding process
+            findMobileToggle();
+        }
+
+        // Make initializeTeamsNavigation available globally immediately
+        window.initializeTeamsNavigation = initializeTeamsNavigation;
+
         // BULLETPROOF Mobile Navigation Function
         function toggleMobileNav() {
             console.log('🔵 BULLETPROOF toggleMobileNav called');
@@ -589,6 +859,18 @@
                     return;
                 }
 
+                // Reset sidebar state first
+                resetSidebarForScreenSize();
+
+                // Check if mobile screen
+                const isMobile = window.innerWidth <= 768;
+                console.log('📱 Is mobile screen:', isMobile);
+
+                if (!isMobile) {
+                    console.log('⚠️ Not mobile screen, skipping mobile nav toggle');
+                    return;
+                }
+
                 const isCurrentlyOpen = sidebar.classList.contains('mobile-open');
                 console.log('📱 Current state:', isCurrentlyOpen ? 'OPEN' : 'CLOSED');
                 console.log('📱 Sidebar classes:', sidebar.className);
@@ -597,52 +879,33 @@
                     // CLOSE mobile nav
                     console.log('🔄 Closing mobile nav...');
                     sidebar.classList.remove('mobile-open');
-                    sidebar.style.transform = 'translateX(-100%)';
-
-                    if (overlay) {
-                        overlay.classList.remove('active');
-                        overlay.style.display = 'none';
-                    }
 
                     if (toggleIcon) {
                         toggleIcon.className = 'fas fa-bars';
                     }
 
-                    document.body.style.overflow = '';
-                    document.body.style.position = '';
-
                     console.log('✅ Mobile nav CLOSED');
                 } else {
-                    // OPEN mobile nav
+                    // OPEN mobile nav - FORCE OVERRIDE DESKTOP STATES
                     console.log('🔄 Opening mobile nav...');
+
+                    // Remove any desktop classes that might interfere
+                    sidebar.classList.remove('hidden', 'mobile-hidden');
+
+                    // Add mobile-open class
                     sidebar.classList.add('mobile-open');
-                    sidebar.style.transform = 'translateX(0)';
+
+                    // Force mobile styles
                     sidebar.style.position = 'fixed';
-                    sidebar.style.zIndex = '1000';
                     sidebar.style.left = '0';
-                    sidebar.style.top = '0';
                     sidebar.style.width = '280px';
                     sidebar.style.height = '100vh';
-
-                    if (overlay) {
-                        overlay.classList.add('active');
-                        overlay.style.display = 'block';
-                        overlay.style.position = 'fixed';
-                        overlay.style.top = '0';
-                        overlay.style.left = '0';
-                        overlay.style.width = '100%';
-                        overlay.style.height = '100%';
-                        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                        overlay.style.zIndex = '999';
-                    }
+                    sidebar.style.zIndex = '1000';
+                    sidebar.style.display = 'flex';
 
                     if (toggleIcon) {
                         toggleIcon.className = 'fas fa-times';
                     }
-
-                    document.body.style.overflow = 'hidden';
-                    document.body.style.position = 'fixed';
-                    document.body.style.width = '100%';
 
                     console.log('✅ Mobile nav OPENED');
                 }
@@ -659,6 +922,31 @@
                 console.error('❌ Error in toggleMobileNav:', error);
                 console.error('❌ Error stack:', error.stack);
             }
+        }
+
+        // Make toggleMobileNav available globally immediately
+        window.toggleMobileNav = toggleMobileNav;
+
+        // Debug: Verify function is available
+        console.log('✅ toggleMobileNav function defined and available globally:', typeof window.toggleMobileNav);
+
+        // Fallback function for immediate availability
+        if (typeof window.toggleMobileNav !== 'function') {
+            window.toggleMobileNav = function() {
+                console.log('🔄 FALLBACK: toggleMobileNav called');
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    const isOpen = sidebar.classList.contains('mobile-open');
+                    if (isOpen) {
+                        sidebar.classList.remove('mobile-open');
+                        console.log('✅ FALLBACK: Sidebar closed');
+                    } else {
+                        sidebar.classList.add('mobile-open');
+                        console.log('✅ FALLBACK: Sidebar opened');
+                    }
+                }
+            };
+            console.log('✅ FALLBACK: toggleMobileNav fallback function created');
         }
 
         // Simple Close Mobile Nav Function
@@ -1019,6 +1307,148 @@
             });
         }
 
+        // Initialize mobile toggle button - SIMPLE AND WORKING
+        function initMobileToggle() {
+            console.log('🔧 INIT: Setting up mobile toggle button');
+
+            const mobileToggle = document.getElementById('mobile-nav-toggle');
+            if (!mobileToggle) {
+                console.error('❌ Mobile toggle button not found');
+                return;
+            }
+
+            // Add click event listener
+            mobileToggle.addEventListener('click', function(e) {
+                console.log('📱 Mobile toggle clicked');
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Call the existing toggleMobileNav function
+                toggleMobileNav();
+            });
+
+            console.log('✅ Mobile toggle button initialized');
+        }
+
+        // Reset sidebar state based on screen size
+        function resetSidebarForScreenSize() {
+            console.log('🔄 RESET: Preparing sidebar for current screen size');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            if (!sidebar) {
+                console.error('❌ RESET: Sidebar not found');
+                return;
+            }
+
+            const isDesktop = window.innerWidth > 768;
+            console.log('📏 RESET: Screen type:', isDesktop ? 'DESKTOP' : 'MOBILE');
+
+            if (isDesktop) {
+                // DESKTOP: Reset to desktop behavior
+                console.log('🖥️ RESET: Setting up for desktop');
+
+                // Remove ALL mobile classes and states
+                sidebar.classList.remove('mobile-open', 'mobile-hidden');
+
+                // Remove ALL mobile inline styles that might interfere
+                sidebar.style.removeProperty('position');
+                sidebar.style.removeProperty('left');
+                sidebar.style.removeProperty('top');
+                sidebar.style.removeProperty('z-index');
+                sidebar.style.removeProperty('width');
+                sidebar.style.removeProperty('height');
+                sidebar.style.removeProperty('transform');
+                sidebar.style.removeProperty('margin-left');
+                sidebar.style.removeProperty('display');
+                sidebar.style.removeProperty('flex-direction');
+                sidebar.style.removeProperty('background');
+                sidebar.style.removeProperty('color');
+                sidebar.style.removeProperty('border-right');
+                sidebar.style.removeProperty('overflow-y');
+                sidebar.style.removeProperty('overflow-x');
+                sidebar.style.removeProperty('transition');
+
+                // Force desktop layout
+                const appContainer = document.querySelector('.app-container');
+                if (appContainer) {
+                    appContainer.style.display = 'flex';
+                    appContainer.style.flexDirection = 'row';
+                }
+
+                if (mainContent) {
+                    mainContent.style.removeProperty('width');
+                    mainContent.style.removeProperty('margin-left');
+                    mainContent.style.flex = '1';
+                    mainContent.style.order = '2';
+                }
+
+                // Let CSS handle desktop layout
+                console.log('✅ RESET: Sidebar reset for desktop - all mobile styles removed');
+
+            } else {
+                // MOBILE: Reset to mobile behavior
+                console.log('📱 RESET: Setting up for mobile');
+
+                // Remove desktop classes that might interfere
+                sidebar.classList.remove('hidden');
+
+                // Remove inline styles that might interfere
+                sidebar.style.removeProperty('margin-left');
+                sidebar.style.removeProperty('transform');
+                sidebar.style.removeProperty('display');
+
+                // Ensure mobile-ready state
+                sidebar.style.position = 'fixed';
+                sidebar.style.left = sidebar.classList.contains('mobile-open') ? '0' : '-300px';
+                sidebar.style.width = '280px';
+                sidebar.style.height = '100vh';
+                sidebar.style.zIndex = '1000';
+
+                console.log('✅ RESET: Sidebar reset for mobile');
+            }
+        }
+
+        // Test function to manually check sidebar
+        function testSidebar() {
+            console.log('🧪 TESTING: Sidebar functionality');
+            const sidebar = document.querySelector('.sidebar');
+            if (!sidebar) {
+                console.error('❌ TEST: Sidebar not found');
+                return;
+            }
+
+            console.log('📊 TEST: Sidebar current state:', {
+                classes: sidebar.className,
+                position: getComputedStyle(sidebar).position,
+                left: getComputedStyle(sidebar).left,
+                width: getComputedStyle(sidebar).width,
+                zIndex: getComputedStyle(sidebar).zIndex,
+                display: getComputedStyle(sidebar).display
+            });
+
+            // Reset first
+            resetSidebarForScreenSize();
+
+            // Toggle the sidebar
+            const isOpen = sidebar.classList.contains('mobile-open');
+            if (isOpen) {
+                sidebar.classList.remove('mobile-open');
+                console.log('🧪 TEST: Sidebar CLOSED');
+            } else {
+                sidebar.classList.add('mobile-open');
+                console.log('🧪 TEST: Sidebar OPENED');
+            }
+
+            // Check state after toggle
+            setTimeout(() => {
+                console.log('📊 TEST: Sidebar after toggle:', {
+                    classes: sidebar.className,
+                    left: getComputedStyle(sidebar).left
+                });
+            }, 100);
+        }
+
         // Make ALL functions available globally for testing
         window.testMobileNav = testMobileNav;
         window.forceMobileNav = forceMobileNav;
@@ -1028,6 +1458,267 @@
         window.handleTeamsMobileToggle = handleTeamsMobileToggle;
         window.initializeTeamsNavigation = initializeTeamsNavigation;
         window.ultraAggressiveTeamsMobileInit = ultraAggressiveTeamsMobileInit;
+        // NUCLEAR: Force desktop layout function
+        function nuclearForceDesktopLayout() {
+            console.log('💥 NUCLEAR: Forcing desktop layout with maximum override');
+
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const appContainer = document.querySelector('.app-container');
+
+            if (!sidebar || !mainContent || !appContainer) {
+                console.error('❌ NUCLEAR: Required elements not found');
+                return;
+            }
+
+            // NUCLEAR: Remove ALL mobile classes and attributes
+            sidebar.classList.remove('mobile-open', 'mobile-hidden', 'hidden');
+            sidebar.removeAttribute('style');
+            mainContent.removeAttribute('style');
+            appContainer.removeAttribute('style');
+
+            // NUCLEAR: Force app container with maximum priority
+            const appStyles = {
+                'display': 'flex',
+                'flex-direction': 'row',
+                'height': '100vh',
+                'width': '100vw',
+                'max-width': '100vw',
+                'max-height': '100vh',
+                'overflow': 'hidden',
+                'position': 'relative'
+            };
+
+            Object.keys(appStyles).forEach(prop => {
+                appContainer.style.setProperty(prop, appStyles[prop], 'important');
+            });
+
+            // NUCLEAR: Force sidebar with maximum priority
+            const sidebarStyles = {
+                'position': 'relative',
+                'left': 'auto',
+                'top': 'auto',
+                'right': 'auto',
+                'bottom': 'auto',
+                'transform': 'none',
+                'translate': 'none',
+                'z-index': 'auto',
+                'width': '300px',
+                'min-width': '300px',
+                'max-width': '300px',
+                'height': '100vh',
+                'min-height': '100vh',
+                'max-height': '100vh',
+                'flex-shrink': '0',
+                'flex-grow': '0',
+                'flex-basis': '300px',
+                'order': '1',
+                'display': 'flex',
+                'flex-direction': 'column',
+                'margin': '0',
+                'padding': '0'
+            };
+
+            Object.keys(sidebarStyles).forEach(prop => {
+                sidebar.style.setProperty(prop, sidebarStyles[prop], 'important');
+            });
+
+            // NUCLEAR: Force main content with maximum priority
+            const mainContentStyles = {
+                'position': 'relative',
+                'left': 'auto',
+                'top': 'auto',
+                'right': 'auto',
+                'bottom': 'auto',
+                'transform': 'none',
+                'translate': 'none',
+                'margin': '0',
+                'padding': '0',
+                'width': 'auto',
+                'min-width': '0',
+                'max-width': 'none',
+                'height': '100vh',
+                'min-height': '100vh',
+                'max-height': '100vh',
+                'flex': '1',
+                'flex-shrink': '1',
+                'flex-grow': '1',
+                'flex-basis': 'auto',
+                'order': '2',
+                'display': 'flex',
+                'flex-direction': 'column',
+                'overflow': 'hidden',
+                'z-index': 'auto'
+            };
+
+            Object.keys(mainContentStyles).forEach(prop => {
+                mainContent.style.setProperty(prop, mainContentStyles[prop], 'important');
+            });
+
+            // NUCLEAR: Force body and html if needed
+            document.body.style.setProperty('margin', '0', 'important');
+            document.body.style.setProperty('padding', '0', 'important');
+            document.body.style.setProperty('overflow', 'hidden', 'important');
+            document.documentElement.style.setProperty('margin', '0', 'important');
+            document.documentElement.style.setProperty('padding', '0', 'important');
+
+            console.log('💥 NUCLEAR: Desktop layout forced with maximum override');
+
+            // Verify the layout
+            setTimeout(() => {
+                const sidebarRect = sidebar.getBoundingClientRect();
+                const mainContentRect = mainContent.getBoundingClientRect();
+                const appContainerRect = appContainer.getBoundingClientRect();
+
+                console.log('💥 NUCLEAR: Layout verification:', {
+                    appContainer: {
+                        width: appContainerRect.width,
+                        height: appContainerRect.height,
+                        display: getComputedStyle(appContainer).display,
+                        flexDirection: getComputedStyle(appContainer).flexDirection
+                    },
+                    sidebar: {
+                        width: sidebarRect.width,
+                        height: sidebarRect.height,
+                        left: sidebarRect.left,
+                        position: getComputedStyle(sidebar).position
+                    },
+                    mainContent: {
+                        width: mainContentRect.width,
+                        height: mainContentRect.height,
+                        left: mainContentRect.left,
+                        flex: getComputedStyle(mainContent).flex
+                    }
+                });
+
+                if (sidebarRect.width !== 300 || getComputedStyle(sidebar).position !== 'relative') {
+                    console.error('💥 NUCLEAR: Layout still not correct, trying again...');
+                    setTimeout(nuclearForceDesktopLayout, 100);
+                }
+            }, 100);
+        }
+
+        // Make functions available globally
+        window.testSidebar = testSidebar;
+        window.resetSidebarForScreenSize = resetSidebarForScreenSize;
+        window.nuclearForceDesktopLayout = nuclearForceDesktopLayout;
+        window.forceDesktopLayout = nuclearForceDesktopLayout; // Alias for compatibility
+
+        // Initialize everything when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 DOM Ready: Initializing navigation');
+            initMobileToggle();
+            resetSidebarForScreenSize();
+        });
+
+        // Reset sidebar when window is resized
+        window.addEventListener('resize', function() {
+            console.log('📏 RESIZE: Window resized to', window.innerWidth + 'x' + window.innerHeight);
+
+            const isDesktop = window.innerWidth > 768;
+
+            if (isDesktop) {
+                // NUCLEAR: Force desktop layout immediately
+                console.log('💥 RESIZE: Detected desktop, forcing nuclear layout');
+                setTimeout(function() {
+                    resetSidebarForScreenSize();
+                    nuclearForceDesktopLayout();
+                }, 10);
+                setTimeout(nuclearForceDesktopLayout, 100);
+                setTimeout(nuclearForceDesktopLayout, 300);
+            } else {
+                // Reset for mobile
+                setTimeout(resetSidebarForScreenSize, 100);
+            }
+        });
+
+        // Also initialize after a short delay for safety
+        setTimeout(function() {
+            initMobileToggle();
+            resetSidebarForScreenSize();
+
+            // NUCLEAR: Force desktop layout if on desktop
+            if (window.innerWidth > 768) {
+                console.log('💥 INIT: Detected desktop, forcing nuclear layout');
+                setTimeout(nuclearForceDesktopLayout, 100);
+                setTimeout(nuclearForceDesktopLayout, 300);
+                setTimeout(nuclearForceDesktopLayout, 500);
+            }
+        }, 500);
+
+        // Test layout function
+        function testLayout() {
+            console.log('🧪 LAYOUT TEST: Checking current layout');
+
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const appContainer = document.querySelector('.app-container');
+
+            if (!sidebar || !mainContent || !appContainer) {
+                console.error('❌ TEST: Elements not found');
+                return;
+            }
+
+            const sidebarStyles = getComputedStyle(sidebar);
+            const mainContentStyles = getComputedStyle(mainContent);
+            const appContainerStyles = getComputedStyle(appContainer);
+
+            console.log('📊 LAYOUT TEST Results:', {
+                screenWidth: window.innerWidth,
+                isDesktop: window.innerWidth > 768,
+                appContainer: {
+                    display: appContainerStyles.display,
+                    flexDirection: appContainerStyles.flexDirection,
+                    width: appContainerStyles.width,
+                    height: appContainerStyles.height
+                },
+                sidebar: {
+                    position: sidebarStyles.position,
+                    left: sidebarStyles.left,
+                    width: sidebarStyles.width,
+                    zIndex: sidebarStyles.zIndex,
+                    order: sidebarStyles.order,
+                    classes: sidebar.className
+                },
+                mainContent: {
+                    flex: mainContentStyles.flex,
+                    width: mainContentStyles.width,
+                    marginLeft: mainContentStyles.marginLeft,
+                    order: mainContentStyles.order
+                }
+            });
+
+            // Auto-fix if desktop layout is wrong
+            if (window.innerWidth > 768) {
+                if (sidebarStyles.position === 'fixed' || sidebarStyles.left !== 'auto') {
+                    console.log('🔧 AUTO-FIX: Desktop layout is wrong, forcing correct layout');
+                    forceDesktopLayout();
+                }
+            }
+        }
+
+        window.testLayout = testLayout;
+
+        // NUCLEAR: Immediate desktop layout check
+        function immediateDesktopCheck() {
+            if (window.innerWidth > 768) {
+                console.log('💥 IMMEDIATE: Desktop detected, forcing nuclear layout NOW');
+                nuclearForceDesktopLayout();
+            }
+        }
+
+        // Execute immediately
+        immediateDesktopCheck();
+
+        // Execute on next tick
+        setTimeout(immediateDesktopCheck, 0);
+
+        // Execute after DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', immediateDesktopCheck);
+        } else {
+            immediateDesktopCheck();
+        }
 
         // TEAMS MOBILE: Start ultra-aggressive initialization immediately
         console.log('🚨 TEAMS MOBILE: Starting ultra-aggressive initialization process');
@@ -1288,6 +1979,8 @@
             }
         });
 
+        // DUPLICATE FUNCTION REMOVED - initializeTeamsNavigation is already defined above
+        /*
         function initializeTeamsNavigation() {
             console.log('🔵 TEAMS MOBILE: Ultra-aggressive Teams mobile navigation initialization');
             console.log('🔵 TEAMS MOBILE: User agent:', navigator.userAgent);
@@ -1466,8 +2159,10 @@
             // Start the ultra-aggressive mobile toggle finding process
             findMobileToggle();
         }
+        */
 
-        // ULTRA-AGGRESSIVE Teams mobile toggle handler
+        // DUPLICATE FUNCTION REMOVED - handleTeamsMobileToggle is already defined above
+        /*
         function handleTeamsMobileToggle() {
             console.log('🔵 TEAMS MOBILE: ULTRA-AGGRESSIVE handleTeamsMobileToggle called');
 
@@ -1658,6 +2353,7 @@
                 console.error('❌ TEAMS MOBILE: Error stack:', error.stack);
             }
         }
+        */
 
         function applyTeamsResponsiveLayout() {
             const appContainer = document.querySelector('.app-container');
