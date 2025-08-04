@@ -1,6 +1,6 @@
 // Indici Reports Assistant - Frontend JavaScript
 
-// Global print function for provider capitation reports
+// Global print function for provider capitation reports - Teams compatible
 window.openPrintWindow = function(printContent) {
     console.log('Opening print window...');
 
@@ -34,11 +34,113 @@ window.openPrintWindow = function(printContent) {
         return;
     }
 
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+    // Check if we're in Teams environment
+    const isTeams = window.location.href.includes('/teams') ||
+                   window.navigator.userAgent.includes('Teams') ||
+                   window.parent !== window;
 
-    if (printWindow) {
-        printWindow.document.write(`
+    if (isTeams) {
+        // Teams-compatible print: Use current window with print styles
+        console.log('Teams environment detected, using inline print...');
+        createInlinePrintView(printContent);
+    } else {
+        // Regular browser: Try popup window first, fallback to inline
+        console.log('Regular browser, attempting popup window...');
+        try {
+            const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+            if (printWindow && !printWindow.closed) {
+                createPopupPrintWindow(printWindow, printContent);
+            } else {
+                throw new Error('Popup blocked');
+            }
+        } catch (error) {
+            console.log('Popup blocked, falling back to inline print...');
+            createInlinePrintView(printContent);
+        }
+    }
+};
+
+// Teams-compatible inline print function
+function createInlinePrintView(printContent) {
+    // Create overlay with print content
+    const printOverlay = document.createElement('div');
+    printOverlay.id = 'print-overlay';
+    printOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        z-index: 10000;
+        overflow: auto;
+        padding: 20px;
+        box-sizing: border-box;
+    `;
+
+    printOverlay.innerHTML = `
+        <div class="print-container">
+            <div class="print-header">
+                <h2>Provider Capitation Report</h2>
+            </div>
+            ${printContent}
+            <div class="print-controls" style="text-align: center; margin: 20px 0; padding: 20px; border: 1px solid #ddd; background: #f8f9fa;">
+                <button onclick="window.print()" style="margin: 0 10px; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; background-color: #007bff; color: white;">
+                    🖨️ Print Report
+                </button>
+                <button onclick="closePrintOverlay()" style="margin: 0 10px; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; background-color: #6c757d; color: white;">
+                    ❌ Close
+                </button>
+            </div>
+        </div>
+    `;
+
+    // Add print styles
+    const printStyles = document.createElement('style');
+    printStyles.innerHTML = `
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-overlay, #print-overlay * {
+                visibility: visible;
+            }
+            #print-overlay {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            .print-controls {
+                display: none !important;
+            }
+        }
+    `;
+    document.head.appendChild(printStyles);
+
+    // Add close function to global scope
+    window.closePrintOverlay = function() {
+        const overlay = document.getElementById('print-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+        // Remove print styles
+        if (printStyles.parentNode) {
+            printStyles.parentNode.removeChild(printStyles);
+        }
+        delete window.closePrintOverlay;
+    };
+
+    document.body.appendChild(printOverlay);
+    console.log('Inline print view created for Teams compatibility');
+}
+
+// Regular popup window print function
+function createPopupPrintWindow(printWindow, printContent) {
+    printWindow.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -207,15 +309,10 @@ window.openPrintWindow = function(printContent) {
 </html>
         `);
 
-        printWindow.document.close();
-        printWindow.focus();
-
-        console.log('Print window opened successfully');
-    } else {
-        console.error('Print window was blocked');
-        alert('Print window blocked! Please allow popups for this site and try the button again.');
-    }
-};
+    printWindow.document.close();
+    printWindow.focus();
+    console.log('Popup print window opened successfully');
+}
 
 // Global function for sending messages from buttons
 window.sendMessage = function(message) {
@@ -345,42 +442,73 @@ class IndiciChatApp {
     }
     
     sendMessage() {
+        console.log('🟢 ChatApp.sendMessage() called');
+
+        if (!this.messageInput) {
+            console.error('❌ Message input not found');
+            return;
+        }
+
         const message = this.messageInput.value.trim();
 
-        console.log('SendMessage called:', {
+        console.log('📝 SendMessage details:', {
             message: message,
+            messageLength: message.length,
             isConnected: this.isConnected,
-            socket: !!this.socket
+            socket: !!this.socket,
+            inputElement: !!this.messageInput
         });
 
         if (!message) {
-            console.log('No message to send');
+            console.log('⚠️ No message to send');
+            return;
+        }
+
+        if (!this.socket) {
+            console.error('❌ Socket not initialized');
             return;
         }
 
         if (!this.isConnected) {
-            console.log('Not connected to server');
-            this.addMessage('Connection error. Please refresh the page.', 'assistant', 'error');
+            console.error('❌ Not connected to server');
+            this.addMessage('❌ Connection error. Please refresh the page.', 'assistant', 'error');
             return;
         }
 
+        console.log('✅ All checks passed, sending message...');
+
         // Add user message to chat
+        console.log('📤 Adding user message to chat');
         this.addMessage(message, 'user', 'chat');
 
         // Send to server
-        console.log('Sending message to server:', message);
-        this.socket.emit('user_message', { message: message });
+        console.log('🚀 Sending message to server:', message);
+        try {
+            this.socket.emit('user_message', { message: message });
+            console.log('✅ Message emitted successfully');
+        } catch (error) {
+            console.error('❌ Error emitting message:', error);
+            this.addMessage('❌ Error sending message. Please try again.', 'assistant', 'error');
+            return;
+        }
 
         // Clear input
+        console.log('🧹 Clearing input and updating UI');
         this.messageInput.value = '';
         this.updateCharCount();
         this.autoResizeInput();
 
         // Disable send button temporarily
-        this.sendButton.disabled = true;
-        setTimeout(() => {
-            this.sendButton.disabled = false;
-        }, 1000);
+        if (this.sendButton) {
+            this.sendButton.disabled = true;
+            setTimeout(() => {
+                if (this.sendButton) {
+                    this.sendButton.disabled = false;
+                }
+            }, 1000);
+        }
+
+        console.log('🎉 SendMessage completed successfully');
     }
     
     addMessage(text, sender, type = 'chat', timestamp = null) {
@@ -812,12 +940,23 @@ function toggleSidebar() {
 }
 
 function sendMessage() {
-    console.log('Global sendMessage called, chatApp exists:', !!window.chatApp);
-    if (window.chatApp) {
-        window.chatApp.sendMessage();
-    } else {
-        console.error('ChatApp not initialized');
+    console.log('🔵 Global sendMessage called');
+    console.log('🔍 ChatApp exists:', !!window.chatApp);
+    console.log('🔍 ChatApp connected:', window.chatApp?.isConnected);
+    console.log('🔍 Socket exists:', !!window.chatApp?.socket);
+
+    if (!window.chatApp) {
+        console.error('❌ ChatApp not initialized');
+        return;
     }
+
+    if (!window.chatApp.isConnected) {
+        console.error('❌ Not connected to server');
+        return;
+    }
+
+    console.log('✅ Calling chatApp.sendMessage()');
+    window.chatApp.sendMessage();
 }
 
 function toggleCategory(categoryId) {
@@ -836,7 +975,7 @@ function toggleCategory(categoryId) {
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.chatApp = new IndiciChatApp();
-    
+
     // Add some welcome styling
     setTimeout(() => {
         if (window.chatApp.isConnected) {

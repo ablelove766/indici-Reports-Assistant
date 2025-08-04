@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>indici Reports Assistant</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///wA">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -262,22 +263,7 @@
                     </div>
                 </div>
                 
-                <div class="section">
-                    <h3><i class="fas fa-question-circle"></i> Help</h3>
-                    <div class="help-content">
-                        <p>Ask me to:</p>
-                        <ul>
-                            <li>Generate capitation reports</li>
-                            <li>Check service health</li>
-                            <li>Show sample queries</li>
-                            <li>Explain report data</li>
-                        </ul>
-                        <button class="action-btn help-btn" onclick="sendSampleQuery('help')">
-                            <i class="fas fa-question"></i>
-                            Get Help
-                        </button>
-                    </div>
-                </div>
+
             </div>
             
             <div class="sidebar-footer">
@@ -304,8 +290,8 @@
                     <button class="header-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <!-- Mobile Toggle Button -->
-                    <button class="mobile-nav-toggle" onclick="toggleMobileNav()" title="Toggle Navigation">
+                    <!-- Mobile Toggle Button - Bulletproof for Real Mobile Devices -->
+                    <button id="mobile-nav-toggle" class="mobile-nav-toggle" title="Toggle Navigation">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
@@ -329,7 +315,7 @@
             <div class="chat-input-container">
                 <div class="input-wrapper">
                     <input type="text" id="message-input" placeholder="Ask me about indici Reports..." maxlength="500">
-                    <button id="send-button" onclick="sendMessage()">
+                    <button id="send-button" onclick="console.log('🔵 Send button clicked'); sendMessage();">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
@@ -346,77 +332,376 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
-    <!-- Mobile Navigation Script -->
+    <!-- Direct sendMessage function - Always works -->
     <script>
-        // Mobile Navigation Functions
+        // Direct sendMessage function that always works
+        window.sendMessage = function() {
+            console.log('🔵 Direct sendMessage called');
+
+            const messageInput = document.getElementById('message-input');
+            if (!messageInput) {
+                console.error('❌ Message input not found');
+                return;
+            }
+
+            const message = messageInput.value.trim();
+            if (!message) {
+                console.log('⚠️ No message to send');
+                return;
+            }
+
+            console.log('📝 Message to send:', message);
+
+            // Try ChatApp first
+            if (window.chatApp && window.chatApp.sendMessage && window.chatApp.isConnected) {
+                console.log('✅ Using ChatApp.sendMessage()');
+                window.chatApp.sendMessage();
+                return;
+            }
+
+            // Fallback: Direct socket approach
+            if (window.io && typeof io === 'function') {
+                console.log('🔄 Using direct socket approach');
+                try {
+                    const socket = io();
+
+                    socket.on('connect', () => {
+                        console.log('✅ Direct socket connected');
+
+                        // Add message to chat manually
+                        const chatMessages = document.getElementById('chat-messages');
+                        if (chatMessages) {
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = 'message user chat';
+                            messageDiv.innerHTML = `
+                                <div class="avatar">👤</div>
+                                <div class="message-text">${message}</div>
+                            `;
+                            chatMessages.appendChild(messageDiv);
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+
+                        // Send to server
+                        socket.emit('user_message', { message: message });
+
+                        // Clear input
+                        messageInput.value = '';
+
+                        console.log('✅ Message sent via direct socket');
+                    });
+
+                    socket.on('bot_message', (data) => {
+                        console.log('📨 Received bot response');
+                        const chatMessages = document.getElementById('chat-messages');
+                        if (chatMessages) {
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = 'message assistant chat';
+                            messageDiv.innerHTML = `
+                                <div class="avatar">🤖</div>
+                                <div class="message-text">${data.message}</div>
+                            `;
+                            chatMessages.appendChild(messageDiv);
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('❌ Direct socket error:', error);
+                }
+            } else {
+                console.error('❌ Socket.IO not available');
+            }
+        };
+
+        // Also ensure the function is available after DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (typeof sendMessage === 'undefined') {
+                    console.log('⚠️ sendMessage still not defined after DOM load, creating backup...');
+                    window.sendMessage = function() {
+                        console.log('🔵 Backup sendMessage called');
+                        if (window.chatApp && window.chatApp.sendMessage) {
+                            window.chatApp.sendMessage();
+                        } else {
+                            console.error('❌ ChatApp not available in backup function');
+                        }
+                    };
+                }
+
+                // Add event listener as backup
+                const sendButton = document.getElementById('send-button');
+                if (sendButton) {
+                    console.log('✅ Adding backup event listener to send button');
+                    sendButton.addEventListener('click', function(e) {
+                        console.log('🔵 Send button event listener triggered');
+                        e.preventDefault();
+
+                        if (typeof sendMessage === 'function') {
+                            sendMessage();
+                        } else if (window.chatApp && window.chatApp.sendMessage) {
+                            console.log('📞 Calling chatApp.sendMessage directly');
+                            window.chatApp.sendMessage();
+                        } else {
+                            console.error('❌ No send function available');
+                        }
+                    });
+                }
+
+                // Add Enter key support
+                const messageInput = document.getElementById('message-input');
+                if (messageInput) {
+                    messageInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            console.log('⌨️ Enter key pressed');
+                            if (typeof sendMessage === 'function') {
+                                sendMessage();
+                            } else if (window.chatApp && window.chatApp.sendMessage) {
+                                window.chatApp.sendMessage();
+                            }
+                        }
+                    });
+                }
+            }, 1000);
+        });
+    </script>
+
+    <!-- BULLETPROOF Mobile Navigation Script for Real Mobile Devices -->
+    <script>
+        // Global variables for mobile nav
+        let mobileNavInitialized = false;
+        let mobileToggleButton = null;
+        let sidebar = null;
+        let overlay = null;
+
+        // BULLETPROOF Mobile Navigation Function
         function toggleMobileNav() {
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
+            console.log('🔵 BULLETPROOF toggleMobileNav called');
+            console.log('📱 User agent:', navigator.userAgent);
+            console.log('📱 Screen size:', window.innerWidth + 'x' + window.innerHeight);
 
-            console.log('Toggling mobile nav, current state:', sidebar.classList.contains('mobile-open'));
+            try {
+                // Get elements fresh each time
+                sidebar = document.querySelector('.sidebar');
+                overlay = document.querySelector('.sidebar-overlay');
+                const toggleIcon = document.querySelector('#mobile-nav-toggle i');
 
-            sidebar.classList.toggle('mobile-open');
-            overlay.classList.toggle('active');
+                console.log('📱 Elements check:', {
+                    sidebar: !!sidebar,
+                    overlay: !!overlay,
+                    toggleIcon: !!toggleIcon,
+                    sidebarDisplay: sidebar ? getComputedStyle(sidebar).display : 'not found',
+                    sidebarPosition: sidebar ? getComputedStyle(sidebar).position : 'not found'
+                });
 
-            // Update toggle button icon
-            const toggleBtn = document.querySelector('.mobile-nav-toggle i');
-            if (sidebar.classList.contains('mobile-open')) {
-                toggleBtn.className = 'fas fa-times';
-                console.log('Mobile nav opened');
-            } else {
-                toggleBtn.className = 'fas fa-bars';
-                console.log('Mobile nav closed');
-            }
+                if (!sidebar) {
+                    console.error('❌ Sidebar not found');
+                    return;
+                }
 
-            // Prevent body scroll when sidebar is open
-            if (sidebar.classList.contains('mobile-open')) {
-                document.body.style.overflow = 'hidden';
-            } else {
-                document.body.style.overflow = '';
+                const isCurrentlyOpen = sidebar.classList.contains('mobile-open');
+                console.log('📱 Current state:', isCurrentlyOpen ? 'OPEN' : 'CLOSED');
+                console.log('📱 Sidebar classes:', sidebar.className);
+
+                if (isCurrentlyOpen) {
+                    // CLOSE mobile nav
+                    console.log('🔄 Closing mobile nav...');
+                    sidebar.classList.remove('mobile-open');
+                    sidebar.style.transform = 'translateX(-100%)';
+
+                    if (overlay) {
+                        overlay.classList.remove('active');
+                        overlay.style.display = 'none';
+                    }
+
+                    if (toggleIcon) {
+                        toggleIcon.className = 'fas fa-bars';
+                    }
+
+                    document.body.style.overflow = '';
+                    document.body.style.position = '';
+
+                    console.log('✅ Mobile nav CLOSED');
+                } else {
+                    // OPEN mobile nav
+                    console.log('🔄 Opening mobile nav...');
+                    sidebar.classList.add('mobile-open');
+                    sidebar.style.transform = 'translateX(0)';
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.zIndex = '1000';
+                    sidebar.style.left = '0';
+                    sidebar.style.top = '0';
+                    sidebar.style.width = '280px';
+                    sidebar.style.height = '100vh';
+
+                    if (overlay) {
+                        overlay.classList.add('active');
+                        overlay.style.display = 'block';
+                        overlay.style.position = 'fixed';
+                        overlay.style.top = '0';
+                        overlay.style.left = '0';
+                        overlay.style.width = '100%';
+                        overlay.style.height = '100%';
+                        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        overlay.style.zIndex = '999';
+                    }
+
+                    if (toggleIcon) {
+                        toggleIcon.className = 'fas fa-times';
+                    }
+
+                    document.body.style.overflow = 'hidden';
+                    document.body.style.position = 'fixed';
+                    document.body.style.width = '100%';
+
+                    console.log('✅ Mobile nav OPENED');
+                }
+
+                // Force repaint
+                if (sidebar) {
+                    sidebar.offsetHeight;
+                    void sidebar.offsetWidth;
+                }
+
+                console.log('🎉 toggleMobileNav completed successfully');
+
+            } catch (error) {
+                console.error('❌ Error in toggleMobileNav:', error);
+                console.error('❌ Error stack:', error.stack);
             }
         }
 
+        // Simple Close Mobile Nav Function
         function closeMobileNav() {
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            const toggleBtn = document.querySelector('.mobile-nav-toggle i');
+            console.log('🔵 SIMPLE closeMobileNav called');
 
-            sidebar.classList.remove('mobile-open');
-            overlay.classList.remove('active');
-            if (toggleBtn) {
-                toggleBtn.className = 'fas fa-bars';
+            try {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+                const toggleIcon = document.querySelector('.mobile-nav-toggle i');
+
+                if (sidebar) {
+                    sidebar.classList.remove('mobile-open');
+                    console.log('✅ Removed mobile-open class from sidebar');
+                }
+
+                if (overlay) {
+                    overlay.classList.remove('active');
+                    console.log('✅ Removed active class from overlay');
+                }
+
+                if (toggleIcon) {
+                    toggleIcon.className = 'fas fa-bars';
+                    console.log('✅ Reset toggle icon to bars');
+                }
+
+                // Restore body scroll
+                document.body.style.overflow = '';
+                console.log('✅ Restored body scroll');
+
+                console.log('🎉 closeMobileNav completed successfully');
+
+            } catch (error) {
+                console.error('❌ Error in closeMobileNav:', error);
             }
-
-            // Restore body scroll
-            document.body.style.overflow = '';
-
-            console.log('Mobile nav closed');
         }
 
-        // Close mobile nav when clicking on main content
+        // Simple click outside handler
         document.addEventListener('click', function(e) {
             const sidebar = document.querySelector('.sidebar');
             const toggleBtn = document.querySelector('.mobile-nav-toggle');
 
             if (window.innerWidth <= 768 &&
+                sidebar &&
+                sidebar.classList.contains('mobile-open') &&
                 !sidebar.contains(e.target) &&
-                !toggleBtn.contains(e.target) &&
-                sidebar.classList.contains('mobile-open')) {
+                !toggleBtn.contains(e.target)) {
+                console.log('📱 Clicked outside, closing mobile nav');
                 closeMobileNav();
             }
         });
 
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                closeMobileNav();
-            }
-        });
+        // COMPREHENSIVE Test function for mobile nav debugging
+        function testMobileNav() {
+            console.log('🧪 COMPREHENSIVE mobile navigation test...');
 
-        // Send sample query function
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const toggleBtn = document.getElementById('mobile-nav-toggle');
+
+            console.log('🔍 Element test results:', {
+                sidebar: !!sidebar,
+                overlay: !!overlay,
+                toggleBtn: !!toggleBtn,
+                sidebarClasses: sidebar ? sidebar.className : 'not found',
+                overlayClasses: overlay ? overlay.className : 'not found',
+                toggleBtnDisplay: toggleBtn ? getComputedStyle(toggleBtn).display : 'not found',
+                toggleBtnVisibility: toggleBtn ? getComputedStyle(toggleBtn).visibility : 'not found',
+                toggleBtnPointerEvents: toggleBtn ? getComputedStyle(toggleBtn).pointerEvents : 'not found',
+                toggleBtnZIndex: toggleBtn ? getComputedStyle(toggleBtn).zIndex : 'not found',
+                windowWidth: window.innerWidth,
+                windowHeight: window.innerHeight,
+                isMobile: window.innerWidth <= 768,
+                mobileNavInitialized: mobileNavInitialized,
+                userAgent: navigator.userAgent,
+                touchSupport: 'ontouchstart' in window
+            });
+
+            if (toggleBtn) {
+                console.log('🔍 Toggle button detailed info:', {
+                    id: toggleBtn.id,
+                    className: toggleBtn.className,
+                    style: toggleBtn.style.cssText,
+                    offsetWidth: toggleBtn.offsetWidth,
+                    offsetHeight: toggleBtn.offsetHeight,
+                    clientWidth: toggleBtn.clientWidth,
+                    clientHeight: toggleBtn.clientHeight,
+                    boundingRect: toggleBtn.getBoundingClientRect()
+                });
+
+                // Test click programmatically
+                console.log('🧪 Testing programmatic click...');
+                toggleBtn.click();
+            }
+
+            return 'Check console for detailed test results';
+        }
+
+        // Force mobile nav function for emergency use
+        function forceMobileNav() {
+            console.log('🚨 FORCE mobile nav toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                if (sidebar.classList.contains('mobile-open')) {
+                    sidebar.classList.remove('mobile-open');
+                    sidebar.style.transform = 'translateX(-100%)';
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.add('mobile-open');
+                    sidebar.style.transform = 'translateX(0)';
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.zIndex = '1000';
+                    sidebar.style.left = '0';
+                    sidebar.style.top = '0';
+                    sidebar.style.width = '280px';
+                    sidebar.style.height = '100vh';
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+        }
+
+        // Make functions available globally for testing
+        window.testMobileNav = testMobileNav;
+        window.forceMobileNav = forceMobileNav;
+        window.toggleMobileNav = toggleMobileNav;
+
+        // Enhanced send sample query function
         function sendSampleQuery(query) {
+            console.log('📱 sendSampleQuery called:', query);
+
             // Close mobile nav if open
             if (window.innerWidth <= 768) {
+                console.log('📱 Closing mobile nav before sending query');
                 closeMobileNav();
             }
 
@@ -454,13 +739,162 @@
             URL.revokeObjectURL(url);
         }
 
-        // Initialize mobile nav on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        // BULLETPROOF Mobile Nav Initialization for Real Mobile Devices
+        function initializeMobileNav() {
+            console.log('🚀 BULLETPROOF mobile nav initialization');
+            console.log('📱 Device info:', {
+                userAgent: navigator.userAgent,
+                screenWidth: window.innerWidth,
+                screenHeight: window.innerHeight,
+                devicePixelRatio: window.devicePixelRatio,
+                touchSupport: 'ontouchstart' in window
+            });
+
+            if (mobileNavInitialized) {
+                console.log('⚠️ Mobile nav already initialized, skipping');
+                return;
+            }
+
+            // Get elements
+            mobileToggleButton = document.getElementById('mobile-nav-toggle');
+            sidebar = document.querySelector('.sidebar');
+            overlay = document.querySelector('.sidebar-overlay');
+
+            console.log('📱 Elements found:', {
+                mobileToggleButton: !!mobileToggleButton,
+                sidebar: !!sidebar,
+                overlay: !!overlay
+            });
+
+            if (!mobileToggleButton) {
+                console.error('❌ Mobile toggle button not found');
+                return;
+            }
+
             // Ensure mobile nav is closed on page load
+            closeMobileNav();
+
+            // Remove any existing event listeners
+            mobileToggleButton.removeEventListener('click', handleMobileToggleClick);
+            mobileToggleButton.removeEventListener('touchstart', handleMobileToggleTouch);
+            mobileToggleButton.removeEventListener('touchend', handleMobileToggleTouch);
+
+            // Add multiple event listeners for maximum compatibility
+            mobileToggleButton.addEventListener('click', handleMobileToggleClick, { passive: false });
+            mobileToggleButton.addEventListener('touchstart', handleMobileToggleTouch, { passive: false });
+            mobileToggleButton.addEventListener('touchend', handleMobileToggleTouch, { passive: false });
+
+            // Set up overlay handlers
+            if (overlay) {
+                overlay.removeEventListener('click', handleOverlayClick);
+                overlay.removeEventListener('touchstart', handleOverlayClick);
+                overlay.addEventListener('click', handleOverlayClick, { passive: false });
+                overlay.addEventListener('touchstart', handleOverlayClick, { passive: false });
+                console.log('✅ Overlay event listeners added');
+            }
+
+            // Force button visibility on mobile
             if (window.innerWidth <= 768) {
+                mobileToggleButton.style.display = 'inline-flex';
+                mobileToggleButton.style.visibility = 'visible';
+                mobileToggleButton.style.pointerEvents = 'auto';
+                mobileToggleButton.style.position = 'relative';
+                mobileToggleButton.style.zIndex = '9999';
+                console.log('✅ Mobile toggle forced visible for mobile screen');
+            }
+
+            mobileNavInitialized = true;
+            console.log('🎉 BULLETPROOF mobile navigation initialized');
+        }
+
+        // Event handlers
+        function handleMobileToggleClick(e) {
+            console.log('📱 Mobile toggle CLICK event');
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMobileNav();
+        }
+
+        function handleMobileToggleTouch(e) {
+            console.log('📱 Mobile toggle TOUCH event:', e.type);
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.type === 'touchend') {
+                toggleMobileNav();
+            }
+        }
+
+        function handleOverlayClick(e) {
+            console.log('📱 Overlay clicked/touched');
+            e.preventDefault();
+            e.stopPropagation();
+            closeMobileNav();
+        }
+
+        // BULLETPROOF initialization - Multiple attempts to ensure it works
+        function ensureMobileNavWorks() {
+            console.log('🔄 Ensuring mobile nav works...');
+
+            // Try initialization multiple times
+            initializeMobileNav();
+
+            // Additional safety check
+            setTimeout(() => {
+                const toggleBtn = document.getElementById('mobile-nav-toggle');
+                if (toggleBtn && window.innerWidth <= 768) {
+                    toggleBtn.style.display = 'inline-flex';
+                    toggleBtn.style.visibility = 'visible';
+                    toggleBtn.style.pointerEvents = 'auto';
+                    console.log('🔧 Mobile toggle visibility enforced');
+                }
+            }, 500);
+
+            // Final safety check
+            setTimeout(() => {
+                if (!mobileNavInitialized) {
+                    console.log('🔄 Retrying mobile nav initialization...');
+                    initializeMobileNav();
+                }
+            }, 1000);
+        }
+
+        // Window resize handler
+        window.addEventListener('resize', function() {
+            console.log('📱 Window resized:', window.innerWidth);
+            if (window.innerWidth > 768) {
+                console.log('📱 Switched to desktop, closing mobile nav');
                 closeMobileNav();
+                const toggleBtn = document.getElementById('mobile-nav-toggle');
+                if (toggleBtn) {
+                    toggleBtn.style.display = 'none';
+                }
+            } else {
+                console.log('📱 Mobile view, ensuring toggle is visible');
+                const toggleBtn = document.getElementById('mobile-nav-toggle');
+                if (toggleBtn) {
+                    toggleBtn.style.display = 'inline-flex';
+                    toggleBtn.style.visibility = 'visible';
+                }
             }
         });
+
+        // Multiple initialization attempts for maximum reliability
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 DOM loaded, starting bulletproof mobile nav initialization');
+            ensureMobileNavWorks();
+        });
+
+        // Backup initialization
+        window.addEventListener('load', function() {
+            console.log('📱 Window loaded, backup mobile nav initialization');
+            setTimeout(ensureMobileNavWorks, 100);
+        });
+
+        // Emergency initialization for slow devices
+        setTimeout(function() {
+            console.log('📱 Emergency mobile nav initialization');
+            ensureMobileNavWorks();
+        }, 2000);
     </script>
 
     {% if teams_mode %}
