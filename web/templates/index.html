@@ -18,57 +18,110 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            font-size: 14px; /* Optimize for Teams */
+            font-size: 14px;
         }
+
         .teams-mode .app-container {
             height: 100vh;
             width: 100vw;
             max-width: 100vw;
+            display: flex;
+            flex-direction: row;
         }
+
+        /* Teams Desktop Sidebar */
         .teams-mode .sidebar {
-            width: 280px; /* Optimized for Teams */
+            width: 300px;
+            min-width: 300px;
+            height: 100vh;
+            position: relative;
+            transform: none;
+            background: linear-gradient(180deg, #464775 0%, #6264a7 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .teams-mode .main-content {
             flex: 1;
             min-width: 0;
+            overflow: hidden;
         }
-        /* Hide elements that don't work well in Teams iframe */
-        .teams-mode .sidebar-toggle {
-            display: none;
-        }
-        /* Teams mobile optimizations */
+
+        /* Teams Mobile Navigation */
         @media (max-width: 768px) {
-            .teams-mode .app-container {
-                flex-direction: column;
+            .teams-mode .mobile-nav-toggle {
+                display: block !important;
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 1001;
+                background: #6264a7;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 10px;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             }
+
             .teams-mode .sidebar {
-                width: 100%;
-                height: auto;
-                max-height: 40vh;
-                order: 2;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 280px;
+                height: 100vh;
+                transform: translateX(-100%);
+                z-index: 1000;
+                transition: transform 0.3s ease;
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
             }
+
+            .teams-mode .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
             .teams-mode .main-content {
-                order: 1;
-                height: 60vh;
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .teams-mode .app-container {
+                flex-direction: row;
             }
         }
-        /* Teams compact mode */
-        .teams-mode.compact .sidebar {
-            width: 200px;
+
+        /* Teams Tablet */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .teams-mode .sidebar {
+                width: 250px;
+                min-width: 250px;
+            }
         }
-        .teams-mode.compact .chat-message {
+
+        /* Teams Navigation Styling */
+        .teams-mode .nav-link {
+            color: rgba(255, 255, 255, 0.9);
             font-size: 13px;
-            padding: 8px 12px;
+            padding: 10px 16px;
+        }
+
+        .teams-mode .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        .teams-mode .nav-item.active .nav-link {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .teams-mode .nav-section h3 {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
         }
     </style>
     {% endif %}
 </head>
 <body{% if teams_mode %} class="teams-mode{% if view_mode %} {{ view_mode }}{% endif %}{% if responsive_mode %} responsive-{{ responsive_mode }}{% endif %}"{% endif %}>
-    <!-- Mobile Navigation Toggle -->
-    <button class="mobile-nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle Navigation">
-        <i class="fas fa-bars"></i>
-    </button>
-
     <!-- Sidebar Overlay for Mobile -->
     <div class="sidebar-overlay" onclick="closeMobileNav()"></div>
 
@@ -220,7 +273,12 @@
                     <button class="header-btn" onclick="clearChat()" title="Clear Chat">
                         <i class="fas fa-broom"></i>
                     </button>
+                    <!-- Desktop Toggle Button -->
                     <button class="header-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <!-- Mobile Toggle Button -->
+                    <button class="mobile-nav-toggle" onclick="toggleMobileNav()" title="Toggle Navigation">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
@@ -268,6 +326,8 @@
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.querySelector('.sidebar-overlay');
 
+            console.log('Toggling mobile nav, current state:', sidebar.classList.contains('mobile-open'));
+
             sidebar.classList.toggle('mobile-open');
             overlay.classList.toggle('active');
 
@@ -275,8 +335,17 @@
             const toggleBtn = document.querySelector('.mobile-nav-toggle i');
             if (sidebar.classList.contains('mobile-open')) {
                 toggleBtn.className = 'fas fa-times';
+                console.log('Mobile nav opened');
             } else {
                 toggleBtn.className = 'fas fa-bars';
+                console.log('Mobile nav closed');
+            }
+
+            // Prevent body scroll when sidebar is open
+            if (sidebar.classList.contains('mobile-open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
             }
         }
 
@@ -287,7 +356,14 @@
 
             sidebar.classList.remove('mobile-open');
             overlay.classList.remove('active');
-            toggleBtn.className = 'fas fa-bars';
+            if (toggleBtn) {
+                toggleBtn.className = 'fas fa-bars';
+            }
+
+            // Restore body scroll
+            document.body.style.overflow = '';
+
+            console.log('Mobile nav closed');
         }
 
         // Close mobile nav when clicking on main content
@@ -400,9 +476,8 @@
             if (appContainer && appContainer.dataset.teamsMode === 'true') {
                 console.log('Running in Teams mode');
 
-                // Hide elements that don't work well in Teams
-                const elementsToHide = document.querySelectorAll('.teams-hide');
-                elementsToHide.forEach(el => el.style.display = 'none');
+                // Initialize Teams navigation
+                initializeTeamsNavigation();
 
                 // Apply responsive adjustments based on Teams context
                 if (window.teamsContext) {
@@ -414,43 +489,132 @@
             }
         });
 
+        function initializeTeamsNavigation() {
+            console.log('Initializing Teams navigation');
+
+            // Ensure mobile nav works in Teams
+            const mobileToggle = document.querySelector('.mobile-nav-toggle');
+            const sidebar = document.querySelector('.sidebar');
+
+            if (mobileToggle && sidebar) {
+                // Force show mobile toggle on small screens in Teams
+                if (window.innerWidth <= 768) {
+                    mobileToggle.style.display = 'block';
+                    sidebar.classList.add('mobile-hidden');
+                }
+
+                // Add Teams-specific click handlers
+                mobileToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleMobileNav();
+                });
+            }
+
+            // Initialize navigation items
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Remove active class from all items
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+
+                    // Add active class to clicked item
+                    this.closest('.nav-item').classList.add('active');
+                });
+            });
+        }
+
         function applyTeamsResponsiveLayout() {
             const appContainer = document.querySelector('.app-container');
             const sidebar = document.querySelector('.sidebar');
             const mainContent = document.querySelector('.main-content');
+            const mobileToggle = document.querySelector('.mobile-nav-toggle');
+
+            console.log('Applying Teams responsive layout, viewport:', window.innerWidth);
 
             // Get Teams context for responsive decisions
             if (window.teamsContext && window.teamsContext.page) {
                 const frameContext = window.teamsContext.page.frameContext;
+                console.log('Teams frame context:', frameContext);
 
                 // Apply different layouts based on Teams context
                 if (frameContext === 'meetingStage') {
                     // Meeting stage - more compact
                     document.body.classList.add('compact');
+                    if (sidebar) sidebar.style.width = '250px';
                 } else if (frameContext === 'sidePanel') {
                     // Side panel - very compact
                     document.body.classList.add('compact');
-                    if (sidebar) sidebar.style.width = '200px';
+                    if (sidebar) sidebar.style.width = '220px';
                 }
             }
 
             // Check viewport size and adjust
             const viewportWidth = window.innerWidth;
-            if (viewportWidth < 768) {
-                // Mobile layout
-                if (appContainer) {
-                    appContainer.style.flexDirection = 'column';
+
+            if (viewportWidth <= 768) {
+                // Mobile layout in Teams
+                console.log('Applying mobile layout in Teams');
+
+                if (mobileToggle) {
+                    mobileToggle.style.display = 'block';
                 }
-            } else if (viewportWidth < 1200) {
-                // Tablet layout
+
                 if (sidebar) {
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.width = '280px';
+                    sidebar.style.transform = 'translateX(-100%)';
+                    sidebar.style.zIndex = '1000';
+                }
+
+                if (mainContent) {
+                    mainContent.style.width = '100%';
+                    mainContent.style.marginLeft = '0';
+                }
+
+            } else if (viewportWidth <= 1024) {
+                // Tablet layout in Teams
+                console.log('Applying tablet layout in Teams');
+
+                if (mobileToggle) {
+                    mobileToggle.style.display = 'none';
+                }
+
+                if (sidebar) {
+                    sidebar.style.position = 'relative';
                     sidebar.style.width = '250px';
+                    sidebar.style.transform = 'none';
+                    sidebar.style.zIndex = 'auto';
+                }
+
+            } else {
+                // Desktop layout in Teams
+                console.log('Applying desktop layout in Teams');
+
+                if (mobileToggle) {
+                    mobileToggle.style.display = 'none';
+                }
+
+                if (sidebar) {
+                    sidebar.style.position = 'relative';
+                    sidebar.style.width = '300px';
+                    sidebar.style.transform = 'none';
+                    sidebar.style.zIndex = 'auto';
                 }
             }
         }
 
         function handleTeamsResize() {
             console.log('Teams window resized:', window.innerWidth, 'x', window.innerHeight);
+
+            // Close mobile nav if window becomes large
+            if (window.innerWidth > 768) {
+                closeMobileNav();
+            }
+
+            // Apply responsive layout
             applyTeamsResponsiveLayout();
 
             // Scroll to bottom of chat if needed

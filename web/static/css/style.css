@@ -1304,30 +1304,60 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     transform: scale(1.05);
 }
 
-/* Mobile Navigation Toggle */
+/* Mobile Navigation Toggle - ONLY for mobile screens */
 .mobile-nav-toggle {
-    display: none;
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 1001;
-    background: #6264a7;
-    color: white;
-    border: none;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    background: #6264a7 !important; /* Solid purple background */
+    border: 1px solid #5a5fc7 !important;
+    color: white !important;
+    padding: 10px 12px;
     border-radius: 6px;
-    padding: 10px;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-nav-toggle:hover {
-    background: #5a5fc7;
+    background: #5a5fc7 !important;
     transform: scale(1.05);
+    border-color: #4e54b8 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .mobile-nav-toggle i {
-    font-size: 18px;
+    font-size: 16px;
+    color: white !important;
+}
+
+/* Desktop Sidebar Toggle - ONLY for desktop screens */
+.header-btn[onclick="toggleSidebar()"] {
+    display: inline-flex !important; /* Force visible on desktop */
+    align-items: center;
+    justify-content: center;
+    background: #6264a7 !important; /* Solid purple background */
+    border: 1px solid #5a5fc7 !important;
+    color: white !important;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-btn[onclick="toggleSidebar()"]:hover {
+    background: #5a5fc7 !important;
+    transform: scale(1.05);
+    border-color: #4e54b8 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.header-btn[onclick="toggleSidebar()"] i {
+    color: white !important;
+    font-size: 16px;
 }
 
 /* Overlay for mobile menu */
@@ -1364,9 +1394,13 @@ body[data-teams-theme="dark"] .chat-message.assistant {
 }
 
 @media (max-width: 768px) {
-    /* Show mobile toggle button */
+    /* MOBILE: Show mobile toggle in header, hide desktop toggle */
     .mobile-nav-toggle {
-        display: block;
+        display: inline-flex !important;
+    }
+
+    .header-btn[onclick="toggleSidebar()"] {
+        display: none !important;
     }
 
     /* Hide sidebar by default on mobile */
@@ -1401,6 +1435,25 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     .nav-link i {
         font-size: 18px;
         width: 24px;
+    }
+}
+
+@media (min-width: 769px) {
+    /* DESKTOP: Hide mobile toggle, show desktop toggle */
+    .mobile-nav-toggle {
+        display: none !important;
+    }
+
+    .header-btn[onclick="toggleSidebar()"] {
+        display: inline-flex !important;
+    }
+
+    /* Desktop sidebar behavior */
+    .sidebar {
+        position: relative;
+        transform: none;
+        z-index: auto;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
     }
 }
 
@@ -1489,25 +1542,126 @@ body[data-teams-theme="dark"] .chat-message.assistant {
 .teams-mode .sidebar {
     background: linear-gradient(180deg, #464775 0%, #6264a7 100%);
     border-right: 1px solid rgba(255, 255, 255, 0.1);
+    width: 300px;
+    min-width: 300px;
+    height: 100vh;
+    position: relative;
+    z-index: 1000;
 }
 
 .teams-mode .nav-link {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    padding: 10px 16px;
+    transition: all 0.2s ease;
 }
 
 .teams-mode .nav-link:hover {
     background: rgba(255, 255, 255, 0.15);
     color: #ffffff;
+    transform: translateX(4px);
 }
 
 .teams-mode .nav-item.active .nav-link {
     background: rgba(255, 255, 255, 0.2);
     color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .teams-mode .nav-section h3 {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.8);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.teams-mode .nav-link i {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+}
+
+.teams-mode .nav-link:hover i {
+    color: #ffffff;
+}
+
+/* Teams Mobile Navigation */
+@media (max-width: 768px) {
+    /* Teams Mobile: Show mobile toggle in header, hide desktop toggle */
+    .teams-mode .mobile-nav-toggle {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #6264a7 !important;
+        border: 1px solid #5a5fc7 !important;
+        color: white !important;
+        padding: 10px 12px !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        font-size: 16px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .teams-mode .mobile-nav-toggle:hover {
+        background: #5a5fc7 !important;
+        border-color: #4e54b8 !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .teams-mode .header-btn[onclick="toggleSidebar()"] {
+        display: none !important;
+    }
+
+    .teams-mode .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 280px !important;
+        height: 100vh !important;
+        transform: translateX(-100%) !important;
+        z-index: 1000 !important;
+        transition: transform 0.3s ease !important;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .teams-mode .sidebar.mobile-open {
+        transform: translateX(0) !important;
+    }
+
+    .teams-mode .main-content {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+}
+
+/* Teams Desktop */
+@media (min-width: 769px) {
+    /* Teams Desktop: Hide mobile toggle, show desktop toggle */
+    .teams-mode .mobile-nav-toggle {
+        display: none !important;
+    }
+
+    .teams-mode .header-btn[onclick="toggleSidebar()"] {
+        display: inline-flex !important;
+        background: #6264a7 !important;
+        border: 1px solid #5a5fc7 !important;
+        color: white !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .teams-mode .header-btn[onclick="toggleSidebar()"]:hover {
+        background: #5a5fc7 !important;
+        border-color: #4e54b8 !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+}
+
+/* Teams Tablet */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .teams-mode .sidebar {
+        width: 250px !important;
+        min-width: 250px !important;
+    }
 }
 
 .teams-mode .main-content {
