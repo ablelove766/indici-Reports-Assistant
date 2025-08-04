@@ -89,20 +89,110 @@
                 flex-direction: row;
             }
 
-            /* Teams Mobile - Force toggle button in header */
-            .teams-mode .mobile-nav-toggle {
+            /* Teams Mobile - ULTRA-AGGRESSIVE toggle button for mobile */
+            .teams-mode .mobile-nav-toggle,
+            .teams-mode #mobile-nav-toggle,
+            .teams-mode button.mobile-nav-toggle,
+            .teams-mode button#mobile-nav-toggle {
                 display: inline-flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
                 position: relative !important;
                 background: #6264a7 !important;
+                background-color: #6264a7 !important;
                 color: white !important;
-                border: 1px solid #5a5fc7 !important;
-                border-radius: 6px !important;
-                padding: 10px 12px !important;
+                border: 3px solid #5a5fc7 !important;
+                border-radius: 10px !important;
+                padding: 18px 20px !important;
+                margin: 5px !important;
                 cursor: pointer !important;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4) !important;
                 align-items: center !important;
                 justify-content: center !important;
-                font-size: 16px !important;
+                font-size: 20px !important;
+                min-width: 60px !important;
+                min-height: 60px !important;
+                max-width: 60px !important;
+                max-height: 60px !important;
+                z-index: 999999 !important;
+                -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3) !important;
+                -webkit-touch-callout: none !important;
+                -webkit-user-select: none !important;
+                -khtml-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+                touch-action: manipulation !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                appearance: none !important;
+                outline: none !important;
+                text-decoration: none !important;
+                vertical-align: middle !important;
+                line-height: 1 !important;
+                font-family: 'Font Awesome 6 Free' !important;
+                font-weight: 900 !important;
+            }
+
+            .teams-mode .mobile-nav-toggle:hover,
+            .teams-mode #mobile-nav-toggle:hover,
+            .teams-mode .mobile-nav-toggle:focus,
+            .teams-mode #mobile-nav-toggle:focus,
+            .teams-mode .mobile-nav-toggle:active,
+            .teams-mode #mobile-nav-toggle:active {
+                background: #4e54b8 !important;
+                background-color: #4e54b8 !important;
+                transform: scale(0.92) !important;
+                box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5) !important;
+                outline: none !important;
+                border-color: #3d4399 !important;
+            }
+
+            .teams-mode .mobile-nav-toggle i,
+            .teams-mode #mobile-nav-toggle i,
+            .teams-mode .mobile-nav-toggle::before,
+            .teams-mode #mobile-nav-toggle::before {
+                font-size: 20px !important;
+                color: white !important;
+                pointer-events: none !important;
+                display: block !important;
+                width: 20px !important;
+                height: 20px !important;
+                line-height: 20px !important;
+                text-align: center !important;
+                font-family: 'Font Awesome 6 Free' !important;
+                font-weight: 900 !important;
+            }
+
+            /* Teams Mobile - Force header actions visibility */
+            .teams-mode .header-actions {
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+                padding: 5px !important;
+                background: transparent !important;
+                position: relative !important;
+                z-index: 999998 !important;
+            }
+
+            /* Teams Mobile - Ensure sidebar positioning */
+            .teams-mode .sidebar.mobile-open {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 300px !important;
+                height: 100vh !important;
+                z-index: 999997 !important;
+                transform: translateX(0) !important;
+                background: #6264a7 !important;
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5) !important;
+            }
+
+            .teams-mode .sidebar:not(.mobile-open) {
+                transform: translateX(-100%) !important;
+                position: fixed !important;
+                left: -100% !important;
             }
 
             .teams-mode .header-btn[onclick="toggleSidebar()"] {
@@ -690,10 +780,258 @@
             }
         }
 
-        // Make functions available globally for testing
+        // ULTRA-AGGRESSIVE Teams mobile test function
+        function testTeamsMobileNav() {
+            console.log('🧪 TEAMS MOBILE: ULTRA-AGGRESSIVE Teams mobile navigation test...');
+
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const toggleBtn = document.querySelector('.mobile-nav-toggle') ||
+                             document.getElementById('mobile-nav-toggle') ||
+                             document.querySelector('button.mobile-nav-toggle') ||
+                             document.querySelector('button#mobile-nav-toggle');
+            const isTeamsMode = document.body.classList.contains('teams-mode');
+
+            console.log('🔍 TEAMS MOBILE: Comprehensive test results:', {
+                isTeamsMode: isTeamsMode,
+                sidebar: !!sidebar,
+                overlay: !!overlay,
+                toggleBtn: !!toggleBtn,
+                sidebarClasses: sidebar ? sidebar.className : 'not found',
+                sidebarStyles: sidebar ? sidebar.style.cssText : 'not found',
+                overlayClasses: overlay ? overlay.className : 'not found',
+                overlayStyles: overlay ? overlay.style.cssText : 'not found',
+                toggleBtnDisplay: toggleBtn ? getComputedStyle(toggleBtn).display : 'not found',
+                toggleBtnVisibility: toggleBtn ? getComputedStyle(toggleBtn).visibility : 'not found',
+                toggleBtnOpacity: toggleBtn ? getComputedStyle(toggleBtn).opacity : 'not found',
+                toggleBtnZIndex: toggleBtn ? getComputedStyle(toggleBtn).zIndex : 'not found',
+                toggleBtnPointerEvents: toggleBtn ? getComputedStyle(toggleBtn).pointerEvents : 'not found',
+                windowWidth: window.innerWidth,
+                windowHeight: window.innerHeight,
+                isMobile: window.innerWidth <= 768,
+                userAgent: navigator.userAgent,
+                isTeamsApp: navigator.userAgent.includes('Teams'),
+                isMSTeams: navigator.userAgent.includes('MSTeams'),
+                teamsContext: window.teamsContext || 'not available',
+                touchSupport: 'ontouchstart' in window,
+                devicePixelRatio: window.devicePixelRatio
+            });
+
+            if (toggleBtn) {
+                console.log('🔍 TEAMS MOBILE: Toggle button detailed analysis:', {
+                    id: toggleBtn.id,
+                    className: toggleBtn.className,
+                    tagName: toggleBtn.tagName,
+                    innerHTML: toggleBtn.innerHTML,
+                    outerHTML: toggleBtn.outerHTML.substring(0, 200) + '...',
+                    style: toggleBtn.style.cssText,
+                    offsetWidth: toggleBtn.offsetWidth,
+                    offsetHeight: toggleBtn.offsetHeight,
+                    clientWidth: toggleBtn.clientWidth,
+                    clientHeight: toggleBtn.clientHeight,
+                    scrollWidth: toggleBtn.scrollWidth,
+                    scrollHeight: toggleBtn.scrollHeight,
+                    boundingRect: toggleBtn.getBoundingClientRect(),
+                    parentElement: toggleBtn.parentElement ? toggleBtn.parentElement.tagName : 'not found',
+                    parentClasses: toggleBtn.parentElement ? toggleBtn.parentElement.className : 'not found'
+                });
+
+                // Test multiple click methods
+                console.log('🧪 TEAMS MOBILE: Testing multiple click methods...');
+
+                // Method 1: Direct function call
+                if (typeof handleTeamsMobileToggle === 'function') {
+                    console.log('🧪 TEAMS MOBILE: Method 1 - Direct function call');
+                    handleTeamsMobileToggle();
+                } else {
+                    console.log('❌ TEAMS MOBILE: handleTeamsMobileToggle function not available');
+                }
+
+                // Method 2: Element click
+                setTimeout(() => {
+                    console.log('🧪 TEAMS MOBILE: Method 2 - Element click');
+                    toggleBtn.click();
+                }, 1000);
+
+                // Method 3: Dispatch click event
+                setTimeout(() => {
+                    console.log('🧪 TEAMS MOBILE: Method 3 - Dispatch click event');
+                    const clickEvent = new Event('click', { bubbles: true, cancelable: true });
+                    toggleBtn.dispatchEvent(clickEvent);
+                }, 2000);
+
+                // Method 4: Dispatch touch event
+                setTimeout(() => {
+                    console.log('🧪 TEAMS MOBILE: Method 4 - Dispatch touch event');
+                    const touchEvent = new Event('touchend', { bubbles: true, cancelable: true });
+                    toggleBtn.dispatchEvent(touchEvent);
+                }, 3000);
+
+            } else {
+                console.error('❌ TEAMS MOBILE: Toggle button not found with any selector');
+
+                // Try to find any button in header
+                const headerButtons = document.querySelectorAll('header button, .header button, .header-actions button');
+                console.log('🔍 TEAMS MOBILE: Found header buttons:', headerButtons.length);
+                headerButtons.forEach((btn, index) => {
+                    console.log(`🔍 TEAMS MOBILE: Header button ${index}:`, {
+                        id: btn.id,
+                        className: btn.className,
+                        innerHTML: btn.innerHTML,
+                        display: getComputedStyle(btn).display
+                    });
+                });
+            }
+
+            return 'Check console for detailed Teams mobile test results';
+        }
+
+        // EMERGENCY Teams mobile nav function - ULTRA-AGGRESSIVE
+        function forceTeamsMobileNav() {
+            console.log('🚨 TEAMS MOBILE: EMERGENCY ULTRA-AGGRESSIVE Teams mobile nav toggle');
+
+            try {
+                if (typeof handleTeamsMobileToggle === 'function') {
+                    console.log('🚨 TEAMS MOBILE: Using handleTeamsMobileToggle function');
+                    handleTeamsMobileToggle();
+                } else {
+                    console.log('🚨 TEAMS MOBILE: Using emergency direct manipulation');
+
+                    const sidebar = document.querySelector('.sidebar');
+                    const overlay = document.querySelector('.sidebar-overlay');
+
+                    if (!sidebar) {
+                        console.error('❌ TEAMS MOBILE: Emergency - Sidebar not found');
+                        return;
+                    }
+
+                    const isCurrentlyOpen = sidebar.classList.contains('mobile-open');
+                    console.log('🚨 TEAMS MOBILE: Emergency current state:', isCurrentlyOpen ? 'OPEN' : 'CLOSED');
+
+                    if (isCurrentlyOpen) {
+                        // EMERGENCY CLOSE
+                        console.log('🚨 TEAMS MOBILE: Emergency CLOSE');
+                        sidebar.classList.remove('mobile-open');
+                        sidebar.classList.add('mobile-hidden');
+
+                        const emergencyCloseStyles = {
+                            'transform': 'translateX(-100%)',
+                            'position': 'fixed',
+                            'left': '-100%',
+                            'visibility': 'hidden',
+                            'opacity': '0',
+                            'z-index': '-1'
+                        };
+
+                        Object.keys(emergencyCloseStyles).forEach(property => {
+                            sidebar.style.setProperty(property, emergencyCloseStyles[property], 'important');
+                        });
+
+                        if (overlay) {
+                            overlay.style.setProperty('display', 'none', 'important');
+                            overlay.style.setProperty('opacity', '0', 'important');
+                        }
+
+                        document.body.style.setProperty('overflow', 'auto', 'important');
+                        document.body.style.setProperty('position', 'static', 'important');
+
+                    } else {
+                        // EMERGENCY OPEN
+                        console.log('🚨 TEAMS MOBILE: Emergency OPEN');
+                        sidebar.classList.add('mobile-open');
+                        sidebar.classList.remove('mobile-hidden');
+
+                        const emergencyOpenStyles = {
+                            'transform': 'translateX(0)',
+                            'position': 'fixed',
+                            'top': '0',
+                            'left': '0',
+                            'width': '300px',
+                            'height': '100vh',
+                            'z-index': '999997',
+                            'background': '#6264a7',
+                            'visibility': 'visible',
+                            'opacity': '1',
+                            'pointer-events': 'auto'
+                        };
+
+                        Object.keys(emergencyOpenStyles).forEach(property => {
+                            sidebar.style.setProperty(property, emergencyOpenStyles[property], 'important');
+                        });
+
+                        if (overlay) {
+                            overlay.style.setProperty('display', 'block', 'important');
+                            overlay.style.setProperty('position', 'fixed', 'important');
+                            overlay.style.setProperty('top', '0', 'important');
+                            overlay.style.setProperty('left', '0', 'important');
+                            overlay.style.setProperty('width', '100%', 'important');
+                            overlay.style.setProperty('height', '100%', 'important');
+                            overlay.style.setProperty('background', 'rgba(0, 0, 0, 0.5)', 'important');
+                            overlay.style.setProperty('z-index', '999996', 'important');
+                            overlay.style.setProperty('opacity', '1', 'important');
+                        }
+
+                        document.body.style.setProperty('overflow', 'hidden', 'important');
+                        document.body.style.setProperty('position', 'fixed', 'important');
+                        document.body.style.setProperty('width', '100%', 'important');
+                    }
+
+                    // Force repaint
+                    sidebar.offsetHeight;
+                    void sidebar.offsetWidth;
+                }
+
+                console.log('✅ TEAMS MOBILE: Emergency toggle completed');
+
+            } catch (error) {
+                console.error('❌ TEAMS MOBILE: Emergency error:', error);
+            }
+        }
+
+        // ULTRA-AGGRESSIVE Teams mobile initialization function
+        function ultraAggressiveTeamsMobileInit() {
+            console.log('🚨 TEAMS MOBILE: ULTRA-AGGRESSIVE initialization');
+
+            // Try multiple times with different delays
+            const delays = [0, 100, 500, 1000, 2000, 3000, 5000];
+
+            delays.forEach(delay => {
+                setTimeout(() => {
+                    console.log(`🚨 TEAMS MOBILE: Initialization attempt at ${delay}ms`);
+                    if (typeof initializeTeamsNavigation === 'function') {
+                        initializeTeamsNavigation();
+                    }
+                }, delay);
+            });
+
+            // Also try on various events
+            const events = ['DOMContentLoaded', 'load', 'resize', 'orientationchange', 'touchstart'];
+
+            events.forEach(eventName => {
+                document.addEventListener(eventName, () => {
+                    console.log(`🚨 TEAMS MOBILE: Initialization on ${eventName} event`);
+                    setTimeout(() => {
+                        if (typeof initializeTeamsNavigation === 'function') {
+                            initializeTeamsNavigation();
+                        }
+                    }, 100);
+                });
+            });
+        }
+
+        // Make ALL functions available globally for testing
         window.testMobileNav = testMobileNav;
         window.forceMobileNav = forceMobileNav;
         window.toggleMobileNav = toggleMobileNav;
+        window.testTeamsMobileNav = testTeamsMobileNav;
+        window.forceTeamsMobileNav = forceTeamsMobileNav;
+        window.handleTeamsMobileToggle = handleTeamsMobileToggle;
+        window.initializeTeamsNavigation = initializeTeamsNavigation;
+        window.ultraAggressiveTeamsMobileInit = ultraAggressiveTeamsMobileInit;
+
+        // TEAMS MOBILE: Start ultra-aggressive initialization immediately
+        console.log('🚨 TEAMS MOBILE: Starting ultra-aggressive initialization process');
+        ultraAggressiveTeamsMobileInit();
 
         // Enhanced send sample query function
         function sendSampleQuery(query) {
@@ -951,40 +1289,374 @@
         });
 
         function initializeTeamsNavigation() {
-            console.log('Initializing Teams navigation');
+            console.log('🔵 TEAMS MOBILE: Ultra-aggressive Teams mobile navigation initialization');
+            console.log('🔵 TEAMS MOBILE: User agent:', navigator.userAgent);
+            console.log('🔵 TEAMS MOBILE: Window size:', window.innerWidth + 'x' + window.innerHeight);
+            console.log('🔵 TEAMS MOBILE: Is Teams app:', navigator.userAgent.includes('Teams'));
+            console.log('🔵 TEAMS MOBILE: Is mobile:', window.innerWidth <= 768);
+            console.log('🔵 TEAMS MOBILE: Touch support:', 'ontouchstart' in window);
 
-            // Ensure mobile nav works in Teams
-            const mobileToggle = document.querySelector('.mobile-nav-toggle');
-            const sidebar = document.querySelector('.sidebar');
+            // ULTRA-AGGRESSIVE element finding with multiple attempts
+            let mobileToggle = null;
+            let attempts = 0;
+            const maxAttempts = 10;
 
-            if (mobileToggle && sidebar) {
-                // Force show mobile toggle on small screens in Teams
-                if (window.innerWidth <= 768) {
-                    mobileToggle.style.display = 'block';
-                    sidebar.classList.add('mobile-hidden');
+            function findMobileToggle() {
+                attempts++;
+                console.log(`🔍 TEAMS MOBILE: Attempt ${attempts} to find mobile toggle`);
+
+                mobileToggle = document.querySelector('.mobile-nav-toggle') ||
+                              document.getElementById('mobile-nav-toggle') ||
+                              document.querySelector('button.mobile-nav-toggle') ||
+                              document.querySelector('button#mobile-nav-toggle') ||
+                              document.querySelector('[class*="mobile-nav-toggle"]') ||
+                              document.querySelector('[id*="mobile-nav-toggle"]');
+
+                if (!mobileToggle && attempts < maxAttempts) {
+                    console.log('🔄 TEAMS MOBILE: Mobile toggle not found, retrying...');
+                    setTimeout(findMobileToggle, 200);
+                    return;
                 }
 
-                // Add Teams-specific click handlers
-                mobileToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleMobileNav();
-                });
+                if (!mobileToggle) {
+                    console.error('❌ TEAMS MOBILE: Mobile toggle not found after all attempts');
+                    return;
+                }
+
+                console.log('✅ TEAMS MOBILE: Mobile toggle found:', mobileToggle);
+                setupTeamsMobileToggle();
             }
 
-            // Initialize navigation items
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    // Remove active class from all items
-                    document.querySelectorAll('.nav-item').forEach(item => {
-                        item.classList.remove('active');
+            function setupTeamsMobileToggle() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+
+                console.log('🔵 TEAMS MOBILE: Elements found:', {
+                    mobileToggle: !!mobileToggle,
+                    sidebar: !!sidebar,
+                    overlay: !!overlay,
+                    mobileToggleTag: mobileToggle ? mobileToggle.tagName : 'not found',
+                    mobileToggleId: mobileToggle ? mobileToggle.id : 'not found',
+                    mobileToggleClass: mobileToggle ? mobileToggle.className : 'not found'
+                });
+
+                if (!sidebar) {
+                    console.error('❌ TEAMS MOBILE: Sidebar not found');
+                    return;
+                }
+
+                // ULTRA-AGGRESSIVE: Force mobile toggle visibility for Teams mobile
+                if (window.innerWidth <= 768) {
+                    console.log('🔵 TEAMS MOBILE: Forcing ultra-aggressive toggle visibility');
+
+                    // Apply EVERY possible CSS property to force visibility
+                    const aggressiveStyles = {
+                        'display': 'inline-flex',
+                        'visibility': 'visible',
+                        'opacity': '1',
+                        'pointer-events': 'auto',
+                        'position': 'relative',
+                        'z-index': '999999',
+                        'background': '#6264a7',
+                        'background-color': '#6264a7',
+                        'color': 'white',
+                        'border': '3px solid #5a5fc7',
+                        'border-radius': '10px',
+                        'padding': '18px 20px',
+                        'margin': '5px',
+                        'min-width': '60px',
+                        'min-height': '60px',
+                        'max-width': '60px',
+                        'max-height': '60px',
+                        'cursor': 'pointer',
+                        'font-size': '20px',
+                        'box-shadow': '0 6px 12px rgba(0, 0, 0, 0.4)',
+                        'align-items': 'center',
+                        'justify-content': 'center',
+                        'touch-action': 'manipulation',
+                        '-webkit-tap-highlight-color': 'rgba(255, 255, 255, 0.3)',
+                        '-webkit-touch-callout': 'none',
+                        '-webkit-user-select': 'none',
+                        'user-select': 'none',
+                        'outline': 'none',
+                        'text-decoration': 'none',
+                        'vertical-align': 'middle',
+                        'line-height': '1'
+                    };
+
+                    // Apply all styles with !important
+                    Object.keys(aggressiveStyles).forEach(property => {
+                        mobileToggle.style.setProperty(property, aggressiveStyles[property], 'important');
                     });
 
-                    // Add active class to clicked item
-                    this.closest('.nav-item').classList.add('active');
+                    // Force icon visibility
+                    const icon = mobileToggle.querySelector('i');
+                    if (icon) {
+                        icon.style.setProperty('font-size', '20px', 'important');
+                        icon.style.setProperty('color', 'white', 'important');
+                        icon.style.setProperty('pointer-events', 'none', 'important');
+                        icon.style.setProperty('display', 'block', 'important');
+                    }
+
+                    // Ensure sidebar is initially hidden on mobile
+                    sidebar.classList.add('mobile-hidden');
+                    sidebar.classList.remove('mobile-open');
+                    sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
+                    sidebar.style.setProperty('position', 'fixed', 'important');
+                    sidebar.style.setProperty('left', '-100%', 'important');
+
+                    console.log('✅ TEAMS MOBILE: Ultra-aggressive toggle styling applied');
+                }
+
+                // ULTRA-AGGRESSIVE: Remove ALL existing event listeners by replacing element
+                const newMobileToggle = mobileToggle.cloneNode(true);
+                mobileToggle.parentNode.replaceChild(newMobileToggle, mobileToggle);
+                mobileToggle = newMobileToggle; // Update reference
+
+                // Add MULTIPLE event handlers for maximum compatibility
+                const eventTypes = ['click', 'touchstart', 'touchend', 'mousedown', 'mouseup'];
+
+                eventTypes.forEach(eventType => {
+                    newMobileToggle.addEventListener(eventType, function(e) {
+                        console.log(`🔵 TEAMS MOBILE: ${eventType.toUpperCase()} event triggered`);
+
+                        // Only handle click and touchend for actual toggle
+                        if (eventType === 'click' || eventType === 'touchend') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            handleTeamsMobileToggle();
+                        }
+                    }, { passive: false, capture: true });
                 });
-            });
+
+                // Set up overlay for Teams with multiple event types
+                if (overlay) {
+                    ['click', 'touchstart', 'touchend'].forEach(eventType => {
+                        overlay.addEventListener(eventType, function(e) {
+                            if (eventType === 'click' || eventType === 'touchend') {
+                                console.log(`🔵 TEAMS MOBILE: Overlay ${eventType}`);
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (sidebar.classList.contains('mobile-open')) {
+                                    handleTeamsMobileToggle();
+                                }
+                            }
+                        }, { passive: false, capture: true });
+                    });
+                }
+
+                // Initialize navigation items
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        // Remove active class from all items
+                        document.querySelectorAll('.nav-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+
+                        // Add active class to clicked item
+                        this.closest('.nav-item').classList.add('active');
+                    });
+                });
+
+                console.log('✅ TEAMS MOBILE: Ultra-aggressive navigation initialized successfully');
+            }
+
+            // Start the ultra-aggressive mobile toggle finding process
+            findMobileToggle();
+        }
+
+        // ULTRA-AGGRESSIVE Teams mobile toggle handler
+        function handleTeamsMobileToggle() {
+            console.log('🔵 TEAMS MOBILE: ULTRA-AGGRESSIVE handleTeamsMobileToggle called');
+
+            try {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+                const toggleIcon = document.querySelector('.mobile-nav-toggle i') ||
+                                 document.querySelector('#mobile-nav-toggle i') ||
+                                 document.querySelector('button.mobile-nav-toggle i') ||
+                                 document.querySelector('button#mobile-nav-toggle i');
+
+                console.log('🔵 TEAMS MOBILE: Elements check:', {
+                    sidebar: !!sidebar,
+                    overlay: !!overlay,
+                    toggleIcon: !!toggleIcon,
+                    sidebarClasses: sidebar ? sidebar.className : 'not found'
+                });
+
+                if (!sidebar) {
+                    console.error('❌ TEAMS MOBILE: Sidebar not found');
+                    return;
+                }
+
+                const isCurrentlyOpen = sidebar.classList.contains('mobile-open');
+                console.log('🔵 TEAMS MOBILE: Current state:', isCurrentlyOpen ? 'OPEN' : 'CLOSED');
+
+                if (isCurrentlyOpen) {
+                    // ULTRA-AGGRESSIVE CLOSE for Teams Mobile
+                    console.log('🔄 TEAMS MOBILE: ULTRA-AGGRESSIVE closing mobile nav');
+
+                    // Remove classes
+                    sidebar.classList.remove('mobile-open');
+                    sidebar.classList.add('mobile-hidden');
+
+                    // Apply ULTRA-AGGRESSIVE close styles
+                    const closeStyles = {
+                        'transform': 'translateX(-100%)',
+                        'position': 'fixed',
+                        'left': '-100%',
+                        'top': '0',
+                        'width': '300px',
+                        'height': '100vh',
+                        'z-index': '-1',
+                        'visibility': 'hidden',
+                        'opacity': '0',
+                        'pointer-events': 'none'
+                    };
+
+                    Object.keys(closeStyles).forEach(property => {
+                        sidebar.style.setProperty(property, closeStyles[property], 'important');
+                    });
+
+                    // Handle overlay
+                    if (overlay) {
+                        overlay.classList.remove('active');
+                        const overlayCloseStyles = {
+                            'display': 'none',
+                            'opacity': '0',
+                            'visibility': 'hidden',
+                            'pointer-events': 'none',
+                            'z-index': '-1'
+                        };
+
+                        Object.keys(overlayCloseStyles).forEach(property => {
+                            overlay.style.setProperty(property, overlayCloseStyles[property], 'important');
+                        });
+                    }
+
+                    // Change icon
+                    if (toggleIcon) {
+                        toggleIcon.className = 'fas fa-bars';
+                        toggleIcon.style.setProperty('color', 'white', 'important');
+                    }
+
+                    // Restore body
+                    const bodyRestoreStyles = {
+                        'overflow': 'auto',
+                        'position': 'static',
+                        'width': 'auto',
+                        'height': 'auto'
+                    };
+
+                    Object.keys(bodyRestoreStyles).forEach(property => {
+                        document.body.style.setProperty(property, bodyRestoreStyles[property], 'important');
+                    });
+
+                    console.log('✅ TEAMS MOBILE: Mobile nav ULTRA-AGGRESSIVELY CLOSED');
+
+                } else {
+                    // ULTRA-AGGRESSIVE OPEN for Teams Mobile
+                    console.log('🔄 TEAMS MOBILE: ULTRA-AGGRESSIVE opening mobile nav');
+
+                    // Add classes
+                    sidebar.classList.add('mobile-open');
+                    sidebar.classList.remove('mobile-hidden');
+
+                    // Apply ULTRA-AGGRESSIVE open styles
+                    const openStyles = {
+                        'transform': 'translateX(0)',
+                        'position': 'fixed',
+                        'top': '0',
+                        'left': '0',
+                        'width': '300px',
+                        'height': '100vh',
+                        'z-index': '999997',
+                        'background': '#6264a7',
+                        'background-color': '#6264a7',
+                        'visibility': 'visible',
+                        'opacity': '1',
+                        'pointer-events': 'auto',
+                        'box-shadow': '4px 0 20px rgba(0, 0, 0, 0.5)',
+                        'overflow-y': 'auto',
+                        'overflow-x': 'hidden'
+                    };
+
+                    Object.keys(openStyles).forEach(property => {
+                        sidebar.style.setProperty(property, openStyles[property], 'important');
+                    });
+
+                    // Handle overlay
+                    if (overlay) {
+                        overlay.classList.add('active');
+                        const overlayOpenStyles = {
+                            'display': 'block',
+                            'position': 'fixed',
+                            'top': '0',
+                            'left': '0',
+                            'width': '100%',
+                            'height': '100%',
+                            'background': 'rgba(0, 0, 0, 0.5)',
+                            'background-color': 'rgba(0, 0, 0, 0.5)',
+                            'z-index': '999996',
+                            'opacity': '1',
+                            'visibility': 'visible',
+                            'pointer-events': 'auto'
+                        };
+
+                        Object.keys(overlayOpenStyles).forEach(property => {
+                            overlay.style.setProperty(property, overlayOpenStyles[property], 'important');
+                        });
+                    }
+
+                    // Change icon
+                    if (toggleIcon) {
+                        toggleIcon.className = 'fas fa-times';
+                        toggleIcon.style.setProperty('color', 'white', 'important');
+                    }
+
+                    // Lock body
+                    const bodyLockStyles = {
+                        'overflow': 'hidden',
+                        'position': 'fixed',
+                        'width': '100%',
+                        'height': '100%',
+                        'top': '0',
+                        'left': '0'
+                    };
+
+                    Object.keys(bodyLockStyles).forEach(property => {
+                        document.body.style.setProperty(property, bodyLockStyles[property], 'important');
+                    });
+
+                    console.log('✅ TEAMS MOBILE: Mobile nav ULTRA-AGGRESSIVELY OPENED');
+                }
+
+                // ULTRA-AGGRESSIVE force repaint for Teams Mobile
+                if (sidebar) {
+                    sidebar.offsetHeight;
+                    void sidebar.offsetWidth;
+                    sidebar.getBoundingClientRect();
+
+                    // Force additional repaints
+                    setTimeout(() => {
+                        sidebar.offsetHeight;
+                        void sidebar.offsetWidth;
+                    }, 10);
+
+                    setTimeout(() => {
+                        sidebar.offsetHeight;
+                        void sidebar.offsetWidth;
+                    }, 50);
+                }
+
+                console.log('🎉 TEAMS MOBILE: handleTeamsMobileToggle completed successfully');
+
+            } catch (error) {
+                console.error('❌ TEAMS MOBILE: Error in handleTeamsMobileToggle:', error);
+                console.error('❌ TEAMS MOBILE: Error stack:', error.stack);
+            }
         }
 
         function applyTeamsResponsiveLayout() {
