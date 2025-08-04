@@ -108,17 +108,18 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     width: 100vw;
 }
 
-/* Sidebar Styles */
+/* Sidebar Styles - Modern Teams Design */
 .sidebar {
     width: 320px;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
+    background: #f3f2f1; /* Teams light gray background */
+    color: #323130; /* Teams dark text */
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     position: relative;
     z-index: 10;
     transition: width 0.3s ease, margin-left 0.3s ease;
+    border-right: 1px solid #e1dfdd; /* Teams border color */
 }
 
 /* Sidebar hidden state */
@@ -129,38 +130,46 @@ body[data-teams-theme="dark"] .chat-message.assistant {
 }
 
 .sidebar-header {
-    padding: var(--spacing-xl);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-bottom: 1px solid #e1dfdd; /* Teams border */
+    background: #ffffff; /* White header background */
+    border-radius: 8px 8px 0 0;
+    margin: 8px 8px 0 8px;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-sm);
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .logo i {
-    font-size: var(--font-size-2xl);
-    color: var(--accent-color);
+    font-size: 1.75rem;
+    color: #6264a7; /* Teams purple */
+    background: #f3f2f1;
+    padding: 8px;
+    border-radius: 6px;
 }
 
 .logo h1 {
-    font-size: var(--font-size-2xl);
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 600;
     letter-spacing: -0.025em;
+    color: #323130; /* Teams dark text */
 }
 
 .subtitle {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: var(--font-size-sm);
-    font-weight: 500;
+    color: #605e5c; /* Teams secondary text */
+    font-size: 0.8rem;
+    font-weight: 400;
 }
 
 .sidebar-content {
     flex: 1;
-    padding: var(--spacing-lg);
+    padding: 16px;
     overflow-y: auto;
+    background: #f3f2f1; /* Teams background */
 }
 
 .section {
@@ -291,22 +300,23 @@ body[data-teams-theme="dark"] .chat-message.assistant {
 .action-btn {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: var(--spacing-md);
-    border-radius: var(--radius-md);
+    gap: 8px;
+    background: #f3f2f1; /* Teams light background */
+    border: 1px solid #e1dfdd; /* Teams border */
+    color: #323130; /* Teams dark text */
+    padding: 10px 12px;
+    border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: var(--font-size-sm);
+    font-size: 13px;
     font-weight: 500;
 }
 
 .action-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: #edebe9; /* Teams hover background */
+    border-color: #d2d0ce;
     transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Sidebar Sections */
@@ -317,11 +327,12 @@ body[data-teams-theme="dark"] .chat-message.assistant {
 }
 
 .collapsible-section {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-md);
+    border: 1px solid #e1dfdd; /* Teams border */
+    border-radius: 8px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-    margin-bottom: var(--spacing-sm);
+    background: #ffffff; /* White background */
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .collapsible-section.checkmark-style {
@@ -333,9 +344,15 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    background: #f8f8f8; /* Light Teams background */
+    border-bottom: 1px solid #e1dfdd;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.section-header:hover {
+    background: #f3f2f1;
 }
 
 .checkmark-style .section-header {
@@ -360,19 +377,19 @@ body[data-teams-theme="dark"] .chat-message.assistant {
 
 .section-icon {
     font-size: 16px;
-    margin-right: var(--spacing-sm);
-    color: rgba(255, 255, 255, 0.9);
+    margin-right: 8px;
+    color: #6264a7; /* Teams purple */
 }
 
 .section-title {
     font-weight: 600;
-    font-size: var(--font-size-sm);
-    color: rgba(255, 255, 255, 0.95);
+    font-size: 14px;
+    color: #323130; /* Teams dark text */
 }
 
 .toggle-icon {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.8);
+    color: #605e5c; /* Teams secondary text */
     transition: all 0.3s ease;
     min-width: 20px;
     text-align: center;
@@ -397,12 +414,12 @@ body[data-teams-theme="dark"] .chat-message.assistant {
 }
 
 .section-content {
-    padding: var(--spacing-sm);
+    padding: 12px 16px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 8px;
     transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.05);
+    background: #ffffff; /* White content background */
 }
 
 .checkmark-style .section-content {
@@ -1133,7 +1150,8 @@ body[data-teams-theme="dark"] .chat-message.assistant {
         transform: none;
         order: 2; /* Move sidebar below chat */
         border-right: none;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid #e1dfdd; /* Teams border */
+        background: #f3f2f1; /* Teams background */
     }
 
     .teams-mode .main-content {
@@ -1194,6 +1212,38 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     flex-shrink: 0;
     height: 100vh;
     overflow-y: auto;
+    background: #f3f2f1; /* Teams background */
+    border-right: 1px solid #e1dfdd;
+}
+
+/* Teams sidebar header styling */
+.teams-mode .sidebar-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e1dfdd;
+    margin: 8px;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Teams sidebar sections */
+.teams-mode .collapsible-section {
+    background: #ffffff;
+    border: 1px solid #e1dfdd;
+    margin: 0 8px 8px 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.teams-mode .section-header {
+    background: #f8f8f8;
+    border-bottom: 1px solid #e1dfdd;
+}
+
+.teams-mode .section-header:hover {
+    background: #f3f2f1;
+}
+
+.teams-mode .section-content {
+    background: #ffffff;
 }
 
 .teams-mode .main-content {
@@ -1269,6 +1319,62 @@ body[data-teams-theme="dark"] .teams-mode #message-input {
 
 body[data-teams-theme="dark"] .teams-mode #message-input::placeholder {
     color: var(--dark-text-secondary);
+}
+
+/* Teams Dark Theme Sidebar */
+body[data-teams-theme="dark"] .teams-mode .sidebar {
+    background: #2d2c2c; /* Teams dark background */
+    border-right: 1px solid #484644;
+}
+
+body[data-teams-theme="dark"] .teams-mode .sidebar-header {
+    background: #3b3a39; /* Teams dark header */
+    border-bottom: 1px solid #484644;
+}
+
+body[data-teams-theme="dark"] .teams-mode .logo h1 {
+    color: #ffffff; /* White text in dark mode */
+}
+
+body[data-teams-theme="dark"] .teams-mode .subtitle {
+    color: #d2d0ce; /* Light gray text */
+}
+
+body[data-teams-theme="dark"] .teams-mode .collapsible-section {
+    background: #3b3a39; /* Dark section background */
+    border: 1px solid #484644;
+}
+
+body[data-teams-theme="dark"] .teams-mode .section-header {
+    background: #484644;
+    border-bottom: 1px solid #605e5c;
+}
+
+body[data-teams-theme="dark"] .teams-mode .section-header:hover {
+    background: #605e5c;
+}
+
+body[data-teams-theme="dark"] .teams-mode .section-title {
+    color: #ffffff;
+}
+
+body[data-teams-theme="dark"] .teams-mode .section-icon {
+    color: #a6a6a6; /* Light Teams purple for dark mode */
+}
+
+body[data-teams-theme="dark"] .teams-mode .section-content {
+    background: #3b3a39;
+}
+
+body[data-teams-theme="dark"] .teams-mode .action-btn {
+    background: #484644;
+    border: 1px solid #605e5c;
+    color: #ffffff;
+}
+
+body[data-teams-theme="dark"] .teams-mode .action-btn:hover {
+    background: #605e5c;
+    border-color: #8a8886;
 }
 
 /* Teams view mode variations */
