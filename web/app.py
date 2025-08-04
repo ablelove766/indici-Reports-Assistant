@@ -28,15 +28,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'indici-mcp-chatbot-secret-key'
 
 # Initialize SocketIO with Teams-compatible CORS
-socketio = SocketIO(app, cors_allowed_origins=[
-    "https://teams.microsoft.com",
-    "https://*.teams.microsoft.com",
-    "https://teams.live.com",
-    "https://*.teams.live.com",
-    "https://indici-reports-assistant.onrender.com",
-    "http://localhost:*",
-    "http://0.0.0.0:*"
-], async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=True, engineio_logger=True)
 
 # Store active sessions
 active_sessions = {}
@@ -230,20 +222,32 @@ def get_system_status():
 @socketio.on('connect')
 def handle_connect():
     """Handle client connection."""
-    session_id = request.sid
-    active_sessions[session_id] = {
-        "connected_at": datetime.now(),
-        "message_count": 0
-    }
-    
-    logger.info(f"Client connected: {session_id}")
-    
-    # Send welcome message
-    emit('bot_message', {
-        "message": "👋 Welcome to the indici Reports Assistant! How can I help you today?",
-        "timestamp": datetime.now().isoformat(),
-        "type": "greeting"
-    })
+    try:
+        session_id = request.sid
+        client_info = {
+            "connected_at": datetime.now(),
+            "message_count": 0,
+            "user_agent": request.headers.get('User-Agent', 'Unknown'),
+            "remote_addr": request.remote_addr
+        }
+        active_sessions[session_id] = client_info
+
+        logger.info(f"✅ Client connected: {session_id} from {request.remote_addr}")
+        logger.info(f"User-Agent: {request.headers.get('User-Agent', 'Unknown')}")
+
+        # Send welcome message
+        emit('bot_message', {
+            "message": "👋 Welcome to the indici Reports Assistant! How can I help you today?",
+            "timestamp": datetime.now().isoformat(),
+            "type": "greeting"
+        })
+
+        logger.info(f"Welcome message sent to {session_id}")
+
+    except Exception as e:
+        logger.error(f"❌ Error in handle_connect: {e}")
+        import traceback
+        traceback.print_exc()
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -273,25 +277,31 @@ def handle_user_message(data):
         if session_id in active_sessions:
             active_sessions[session_id]["message_count"] += 1
         
-        logger.info(f"Received message from {session_id}: {message}")
-        
+        logger.info(f"📨 Received message from {session_id}: '{message}'")
+        logger.info(f"Session info: {active_sessions.get(session_id, 'Unknown')}")
+
         # Show typing indicator
         emit('bot_typing', {"typing": True})
+        logger.info(f"🔄 Typing indicator sent to {session_id}")
         
         # Process message asynchronously
         def process_message():
             try:
+                logger.info(f"🔄 Starting async message processing for {session_id}")
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                
+
                 # Handle the message
+                logger.info(f"🤖 Calling chat_handler.handle_message...")
                 response_data = loop.run_until_complete(
                     chat_handler.handle_message(message, session_id)
                 )
-                
+                logger.info(f"✅ Chat handler response: {response_data}")
+
                 loop.close()
-                
+
                 # Send response
+                logger.info(f"📤 Sending response to {session_id}")
                 socketio.emit('bot_typing', {"typing": False}, room=session_id)
                 socketio.emit('bot_message', {
                     "message": response_data["response"],
@@ -299,9 +309,13 @@ def handle_user_message(data):
                     "type": response_data["type"],
                     "success": response_data["success"]
                 }, room=session_id)
+                logger.info(f"✅ Response sent successfully to {session_id}")
                 
             except Exception as e:
-                logger.error(f"Error processing message: {str(e)}")
+                logger.error(f"❌ Error processing message for {session_id}: {str(e)}")
+                import traceback
+                traceback.print_exc()
+
                 socketio.emit('bot_typing', {"typing": False}, room=session_id)
                 socketio.emit('bot_message', {
                     "message": f"❌ Sorry, I encountered an error: {str(e)}",
@@ -309,17 +323,22 @@ def handle_user_message(data):
                     "type": "error",
                     "success": False
                 }, room=session_id)
+                logger.info(f"Error message sent to {session_id}")
         
         # Run in background thread
         socketio.start_background_task(process_message)
         
     except Exception as e:
-        logger.error(f"Error handling user message: {str(e)}")
+        logger.error(f"❌ Error in handle_user_message for {session_id}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
         emit('bot_message', {
             "message": "❌ An unexpected error occurred. Please try again.",
             "timestamp": datetime.now().isoformat(),
             "type": "error"
         })
+        logger.info(f"Main error message sent to {session_id}")
 
 @socketio.on('sample_query')
 def handle_sample_query(data):
@@ -388,17 +407,22 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
-    logger.info(f"Starting indici MCP Chatbot Web Interface")
-    logger.info(f"Host: {config.web_interface_host}")
-    logger.info(f"Port: {config.web_interface_port}")
-    logger.info(f"Debug: {config.web_interface_debug}")
-    port = int(os.environ.get("PORT", 10000))  # Use PORT if defined, fallback to 5000
-    app.run(host="0.0.0.0", port=port, debug=True)
-    # Start the web application
-    socketio.run(
-        app,
-        host=config.web_interface_host,
-        port=config.web_interface_port,
-        debug=config.web_interface_debug,
-        allow_unsafe_werkzeug=True
-    )
+    try:
+        logger.info(f"Starting indici MCP Chatbot Web Interface")
+        logger.info(f"Host: {config.web_interface_host}")
+        logger.info(f"Port: {config.web_interface_port}")
+        logger.info(f"Debug: {config.web_interface_debug}")
+
+        # Start the web application with SocketIO
+        socketio.run(
+            app,
+            host=config.web_interface_host,
+            port=config.web_interface_port,
+            debug=config.web_interface_debug,
+            allow_unsafe_werkzeug=True
+        )
+    except Exception as e:
+        logger.error(f"Failed to start server: {e}")
+        import traceback
+        traceback.print_exc()
+        raise

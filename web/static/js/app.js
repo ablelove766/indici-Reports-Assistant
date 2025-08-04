@@ -271,23 +271,24 @@ class IndiciChatApp {
     }
     
     initSocket() {
+        console.log('Initializing socket connection...');
         this.socket = io();
-        
+
         // Connection events
         this.socket.on('connect', () => {
-            console.log('Connected to server');
+            console.log('✅ Connected to server successfully');
             this.isConnected = true;
             this.updateConnectionStatus('connected', 'Connected');
         });
-        
+
         this.socket.on('disconnect', () => {
-            console.log('Disconnected from server');
+            console.log('❌ Disconnected from server');
             this.isConnected = false;
             this.updateConnectionStatus('error', 'Disconnected');
         });
-        
+
         this.socket.on('connect_error', (error) => {
-            console.error('Connection error:', error);
+            console.error('❌ Connection error:', error);
             this.updateConnectionStatus('error', 'Connection Error');
         });
         
@@ -345,22 +346,36 @@ class IndiciChatApp {
     
     sendMessage() {
         const message = this.messageInput.value.trim();
-        
-        if (!message || !this.isConnected) {
+
+        console.log('SendMessage called:', {
+            message: message,
+            isConnected: this.isConnected,
+            socket: !!this.socket
+        });
+
+        if (!message) {
+            console.log('No message to send');
             return;
         }
-        
+
+        if (!this.isConnected) {
+            console.log('Not connected to server');
+            this.addMessage('Connection error. Please refresh the page.', 'assistant', 'error');
+            return;
+        }
+
         // Add user message to chat
         this.addMessage(message, 'user', 'chat');
-        
+
         // Send to server
+        console.log('Sending message to server:', message);
         this.socket.emit('user_message', { message: message });
-        
+
         // Clear input
         this.messageInput.value = '';
         this.updateCharCount();
         this.autoResizeInput();
-        
+
         // Disable send button temporarily
         this.sendButton.disabled = true;
         setTimeout(() => {
@@ -797,8 +812,11 @@ function toggleSidebar() {
 }
 
 function sendMessage() {
+    console.log('Global sendMessage called, chatApp exists:', !!window.chatApp);
     if (window.chatApp) {
         window.chatApp.sendMessage();
+    } else {
+        console.error('ChatApp not initialized');
     }
 }
 
