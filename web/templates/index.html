@@ -282,35 +282,7 @@
                         </ul>
                     </div>
 
-                    <div class="nav-section">
-                        <h3><i class="fas fa-lightbulb"></i> Quick Actions</h3>
-                        <ul class="nav-items">
-                            <li class="nav-item">
-                                <a href="#" class="nav-link" onclick="sendSampleQuery('Show me patient demographics')">
-                                    <i class="fas fa-users"></i>
-                                    <span>Patient Demographics</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link" onclick="sendSampleQuery('Generate revenue report')">
-                                    <i class="fas fa-dollar-sign"></i>
-                                    <span>Revenue Reports</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link" onclick="sendSampleQuery('Show appointment statistics')">
-                                    <i class="fas fa-calendar-check"></i>
-                                    <span>Appointments</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link" onclick="sendSampleQuery('Provider performance metrics')">
-                                    <i class="fas fa-user-md"></i>
-                                    <span>Provider Metrics</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+
 
                     <div class="nav-section">
                         <h3><i class="fas fa-cog"></i> Tools</h3>
@@ -927,8 +899,7 @@
         // Make toggleMobileNav available globally immediately
         window.toggleMobileNav = toggleMobileNav;
 
-        // Debug: Verify function is available
-        console.log('✅ toggleMobileNav function defined and available globally:', typeof window.toggleMobileNav);
+
 
         // Fallback function for immediate availability
         if (typeof window.toggleMobileNav !== 'function') {
@@ -999,51 +970,7 @@
             }
         });
 
-        // COMPREHENSIVE Test function for mobile nav debugging
-        function testMobileNav() {
-            console.log('🧪 COMPREHENSIVE mobile navigation test...');
 
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            const toggleBtn = document.getElementById('mobile-nav-toggle');
-
-            console.log('🔍 Element test results:', {
-                sidebar: !!sidebar,
-                overlay: !!overlay,
-                toggleBtn: !!toggleBtn,
-                sidebarClasses: sidebar ? sidebar.className : 'not found',
-                overlayClasses: overlay ? overlay.className : 'not found',
-                toggleBtnDisplay: toggleBtn ? getComputedStyle(toggleBtn).display : 'not found',
-                toggleBtnVisibility: toggleBtn ? getComputedStyle(toggleBtn).visibility : 'not found',
-                toggleBtnPointerEvents: toggleBtn ? getComputedStyle(toggleBtn).pointerEvents : 'not found',
-                toggleBtnZIndex: toggleBtn ? getComputedStyle(toggleBtn).zIndex : 'not found',
-                windowWidth: window.innerWidth,
-                windowHeight: window.innerHeight,
-                isMobile: window.innerWidth <= 768,
-                mobileNavInitialized: mobileNavInitialized,
-                userAgent: navigator.userAgent,
-                touchSupport: 'ontouchstart' in window
-            });
-
-            if (toggleBtn) {
-                console.log('🔍 Toggle button detailed info:', {
-                    id: toggleBtn.id,
-                    className: toggleBtn.className,
-                    style: toggleBtn.style.cssText,
-                    offsetWidth: toggleBtn.offsetWidth,
-                    offsetHeight: toggleBtn.offsetHeight,
-                    clientWidth: toggleBtn.clientWidth,
-                    clientHeight: toggleBtn.clientHeight,
-                    boundingRect: toggleBtn.getBoundingClientRect()
-                });
-
-                // Test click programmatically
-                console.log('🧪 Testing programmatic click...');
-                toggleBtn.click();
-            }
-
-            return 'Check console for detailed test results';
-        }
 
         // Force mobile nav function for emergency use
         function forceMobileNav() {
@@ -1068,111 +995,7 @@
             }
         }
 
-        // ULTRA-AGGRESSIVE Teams mobile test function
-        function testTeamsMobileNav() {
-            console.log('🧪 TEAMS MOBILE: ULTRA-AGGRESSIVE Teams mobile navigation test...');
 
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            const toggleBtn = document.querySelector('.mobile-nav-toggle') ||
-                             document.getElementById('mobile-nav-toggle') ||
-                             document.querySelector('button.mobile-nav-toggle') ||
-                             document.querySelector('button#mobile-nav-toggle');
-            const isTeamsMode = document.body.classList.contains('teams-mode');
-
-            console.log('🔍 TEAMS MOBILE: Comprehensive test results:', {
-                isTeamsMode: isTeamsMode,
-                sidebar: !!sidebar,
-                overlay: !!overlay,
-                toggleBtn: !!toggleBtn,
-                sidebarClasses: sidebar ? sidebar.className : 'not found',
-                sidebarStyles: sidebar ? sidebar.style.cssText : 'not found',
-                overlayClasses: overlay ? overlay.className : 'not found',
-                overlayStyles: overlay ? overlay.style.cssText : 'not found',
-                toggleBtnDisplay: toggleBtn ? getComputedStyle(toggleBtn).display : 'not found',
-                toggleBtnVisibility: toggleBtn ? getComputedStyle(toggleBtn).visibility : 'not found',
-                toggleBtnOpacity: toggleBtn ? getComputedStyle(toggleBtn).opacity : 'not found',
-                toggleBtnZIndex: toggleBtn ? getComputedStyle(toggleBtn).zIndex : 'not found',
-                toggleBtnPointerEvents: toggleBtn ? getComputedStyle(toggleBtn).pointerEvents : 'not found',
-                windowWidth: window.innerWidth,
-                windowHeight: window.innerHeight,
-                isMobile: window.innerWidth <= 768,
-                userAgent: navigator.userAgent,
-                isTeamsApp: navigator.userAgent.includes('Teams'),
-                isMSTeams: navigator.userAgent.includes('MSTeams'),
-                teamsContext: window.teamsContext || 'not available',
-                touchSupport: 'ontouchstart' in window,
-                devicePixelRatio: window.devicePixelRatio
-            });
-
-            if (toggleBtn) {
-                console.log('🔍 TEAMS MOBILE: Toggle button detailed analysis:', {
-                    id: toggleBtn.id,
-                    className: toggleBtn.className,
-                    tagName: toggleBtn.tagName,
-                    innerHTML: toggleBtn.innerHTML,
-                    outerHTML: toggleBtn.outerHTML.substring(0, 200) + '...',
-                    style: toggleBtn.style.cssText,
-                    offsetWidth: toggleBtn.offsetWidth,
-                    offsetHeight: toggleBtn.offsetHeight,
-                    clientWidth: toggleBtn.clientWidth,
-                    clientHeight: toggleBtn.clientHeight,
-                    scrollWidth: toggleBtn.scrollWidth,
-                    scrollHeight: toggleBtn.scrollHeight,
-                    boundingRect: toggleBtn.getBoundingClientRect(),
-                    parentElement: toggleBtn.parentElement ? toggleBtn.parentElement.tagName : 'not found',
-                    parentClasses: toggleBtn.parentElement ? toggleBtn.parentElement.className : 'not found'
-                });
-
-                // Test multiple click methods
-                console.log('🧪 TEAMS MOBILE: Testing multiple click methods...');
-
-                // Method 1: Direct function call
-                if (typeof handleTeamsMobileToggle === 'function') {
-                    console.log('🧪 TEAMS MOBILE: Method 1 - Direct function call');
-                    handleTeamsMobileToggle();
-                } else {
-                    console.log('❌ TEAMS MOBILE: handleTeamsMobileToggle function not available');
-                }
-
-                // Method 2: Element click
-                setTimeout(() => {
-                    console.log('🧪 TEAMS MOBILE: Method 2 - Element click');
-                    toggleBtn.click();
-                }, 1000);
-
-                // Method 3: Dispatch click event
-                setTimeout(() => {
-                    console.log('🧪 TEAMS MOBILE: Method 3 - Dispatch click event');
-                    const clickEvent = new Event('click', { bubbles: true, cancelable: true });
-                    toggleBtn.dispatchEvent(clickEvent);
-                }, 2000);
-
-                // Method 4: Dispatch touch event
-                setTimeout(() => {
-                    console.log('🧪 TEAMS MOBILE: Method 4 - Dispatch touch event');
-                    const touchEvent = new Event('touchend', { bubbles: true, cancelable: true });
-                    toggleBtn.dispatchEvent(touchEvent);
-                }, 3000);
-
-            } else {
-                console.error('❌ TEAMS MOBILE: Toggle button not found with any selector');
-
-                // Try to find any button in header
-                const headerButtons = document.querySelectorAll('header button, .header button, .header-actions button');
-                console.log('🔍 TEAMS MOBILE: Found header buttons:', headerButtons.length);
-                headerButtons.forEach((btn, index) => {
-                    console.log(`🔍 TEAMS MOBILE: Header button ${index}:`, {
-                        id: btn.id,
-                        className: btn.className,
-                        innerHTML: btn.innerHTML,
-                        display: getComputedStyle(btn).display
-                    });
-                });
-            }
-
-            return 'Check console for detailed Teams mobile test results';
-        }
 
         // EMERGENCY Teams mobile nav function - ULTRA-AGGRESSIVE
         function forceTeamsMobileNav() {
@@ -1409,51 +1232,113 @@
             }
         }
 
-        // Test function to manually check sidebar
-        function testSidebar() {
-            console.log('🧪 TESTING: Sidebar functionality');
+        // Ensure sidebar content is visible on desktop
+        function ensureSidebarContentVisible() {
+            console.log('👁️ ENSURE: Making sure sidebar content is visible');
+
             const sidebar = document.querySelector('.sidebar');
             if (!sidebar) {
-                console.error('❌ TEST: Sidebar not found');
+                console.error('❌ ENSURE: Sidebar not found');
                 return;
             }
 
-            console.log('📊 TEST: Sidebar current state:', {
-                classes: sidebar.className,
-                position: getComputedStyle(sidebar).position,
-                left: getComputedStyle(sidebar).left,
-                width: getComputedStyle(sidebar).width,
-                zIndex: getComputedStyle(sidebar).zIndex,
-                display: getComputedStyle(sidebar).display
-            });
-
-            // Reset first
-            resetSidebarForScreenSize();
-
-            // Toggle the sidebar
-            const isOpen = sidebar.classList.contains('mobile-open');
-            if (isOpen) {
-                sidebar.classList.remove('mobile-open');
-                console.log('🧪 TEST: Sidebar CLOSED');
-            } else {
-                sidebar.classList.add('mobile-open');
-                console.log('🧪 TEST: Sidebar OPENED');
+            // Only apply on desktop
+            if (window.innerWidth <= 768) {
+                console.log('📱 ENSURE: Mobile screen, skipping');
+                return;
             }
 
-            // Check state after toggle
-            setTimeout(() => {
-                console.log('📊 TEST: Sidebar after toggle:', {
-                    classes: sidebar.className,
-                    left: getComputedStyle(sidebar).left
-                });
-            }, 100);
+            // Ensure sidebar itself is visible
+            sidebar.style.display = 'flex';
+            sidebar.style.visibility = 'visible';
+            sidebar.style.opacity = '1';
+
+            // Ensure sidebar header is visible
+            const sidebarHeader = sidebar.querySelector('.sidebar-header');
+            if (sidebarHeader) {
+                sidebarHeader.style.display = 'block';
+                sidebarHeader.style.visibility = 'visible';
+                sidebarHeader.style.opacity = '1';
+                console.log('✅ ENSURE: Sidebar header made visible');
+            }
+
+            // Ensure sidebar content is visible
+            const sidebarContent = sidebar.querySelector('.sidebar-content');
+            if (sidebarContent) {
+                sidebarContent.style.display = 'block';
+                sidebarContent.style.visibility = 'visible';
+                sidebarContent.style.opacity = '1';
+                sidebarContent.style.flex = '1';
+                sidebarContent.style.overflowY = 'auto';
+                console.log('✅ ENSURE: Sidebar content made visible');
+            }
+
+            // Ensure all navigation elements are visible
+            const navElements = sidebar.querySelectorAll('.nav-section, .nav-items, .nav-item, .nav-link');
+            navElements.forEach((element, index) => {
+                element.style.display = '';
+                element.style.visibility = 'visible';
+                element.style.opacity = '1';
+            });
+
+            if (navElements.length > 0) {
+                console.log(`✅ ENSURE: ${navElements.length} navigation elements made visible`);
+            }
+
+            console.log('✅ ENSURE: Sidebar content visibility ensured');
         }
 
-        // Make ALL functions available globally for testing
-        window.testMobileNav = testMobileNav;
+        // Handle desktop layout - hide sidebar and expand content
+        function handleDesktopLayout() {
+            console.log('🖥️ DESKTOP: Handling desktop layout');
+
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const appContainer = document.querySelector('.app-container');
+
+            if (!sidebar || !mainContent) {
+                console.error('❌ DESKTOP: Required elements not found');
+                return;
+            }
+
+            // Only apply on desktop
+            if (window.innerWidth <= 768) {
+                console.log('📱 DESKTOP: Mobile screen, skipping desktop layout');
+                return;
+            }
+
+            // Check if we should hide sidebar (when transitioning from mobile)
+            const shouldHideSidebar = sidebar.classList.contains('mobile-hidden') ||
+                                    sidebar.classList.contains('mobile-open');
+
+            if (shouldHideSidebar) {
+                console.log('🔄 DESKTOP: Transitioning from mobile - hiding sidebar and expanding content');
+
+                // Hide sidebar completely
+                sidebar.classList.remove('mobile-open', 'mobile-hidden');
+                sidebar.classList.add('hidden');
+
+                // Force main content to full width
+                mainContent.style.width = '100%';
+                mainContent.style.maxWidth = '100%';
+                mainContent.style.flex = '1';
+                mainContent.style.marginLeft = '0';
+
+                if (appContainer) {
+                    appContainer.style.display = 'flex';
+                    appContainer.style.flexDirection = 'row';
+                }
+
+                console.log('✅ DESKTOP: Sidebar hidden, content expanded to full width');
+            } else {
+                console.log('🔄 DESKTOP: Showing sidebar with content');
+                ensureSidebarContentVisible();
+            }
+        }
+
+        // Make functions available globally
         window.forceMobileNav = forceMobileNav;
         window.toggleMobileNav = toggleMobileNav;
-        window.testTeamsMobileNav = testTeamsMobileNav;
         window.forceTeamsMobileNav = forceTeamsMobileNav;
         window.handleTeamsMobileToggle = handleTeamsMobileToggle;
         window.initializeTeamsNavigation = initializeTeamsNavigation;
@@ -1599,8 +1484,9 @@
         }
 
         // Make functions available globally
-        window.testSidebar = testSidebar;
         window.resetSidebarForScreenSize = resetSidebarForScreenSize;
+        window.ensureSidebarContentVisible = ensureSidebarContentVisible;
+        window.handleDesktopLayout = handleDesktopLayout;
         window.nuclearForceDesktopLayout = nuclearForceDesktopLayout;
         window.forceDesktopLayout = nuclearForceDesktopLayout; // Alias for compatibility
 
@@ -1622,10 +1508,17 @@
                 console.log('💥 RESIZE: Detected desktop, forcing nuclear layout');
                 setTimeout(function() {
                     resetSidebarForScreenSize();
+                    handleDesktopLayout();
                     nuclearForceDesktopLayout();
                 }, 10);
-                setTimeout(nuclearForceDesktopLayout, 100);
-                setTimeout(nuclearForceDesktopLayout, 300);
+                setTimeout(function() {
+                    handleDesktopLayout();
+                    nuclearForceDesktopLayout();
+                }, 100);
+                setTimeout(function() {
+                    handleDesktopLayout();
+                    nuclearForceDesktopLayout();
+                }, 300);
             } else {
                 // Reset for mobile
                 setTimeout(resetSidebarForScreenSize, 100);
@@ -1640,64 +1533,24 @@
             // NUCLEAR: Force desktop layout if on desktop
             if (window.innerWidth > 768) {
                 console.log('💥 INIT: Detected desktop, forcing nuclear layout');
-                setTimeout(nuclearForceDesktopLayout, 100);
-                setTimeout(nuclearForceDesktopLayout, 300);
-                setTimeout(nuclearForceDesktopLayout, 500);
+                setTimeout(function() {
+                    handleDesktopLayout();
+                    nuclearForceDesktopLayout();
+                }, 100);
+                setTimeout(function() {
+                    handleDesktopLayout();
+                    nuclearForceDesktopLayout();
+                }, 300);
+                setTimeout(function() {
+                    handleDesktopLayout();
+                    nuclearForceDesktopLayout();
+                }, 500);
             }
         }, 500);
 
-        // Test layout function
-        function testLayout() {
-            console.log('🧪 LAYOUT TEST: Checking current layout');
 
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            const appContainer = document.querySelector('.app-container');
 
-            if (!sidebar || !mainContent || !appContainer) {
-                console.error('❌ TEST: Elements not found');
-                return;
-            }
 
-            const sidebarStyles = getComputedStyle(sidebar);
-            const mainContentStyles = getComputedStyle(mainContent);
-            const appContainerStyles = getComputedStyle(appContainer);
-
-            console.log('📊 LAYOUT TEST Results:', {
-                screenWidth: window.innerWidth,
-                isDesktop: window.innerWidth > 768,
-                appContainer: {
-                    display: appContainerStyles.display,
-                    flexDirection: appContainerStyles.flexDirection,
-                    width: appContainerStyles.width,
-                    height: appContainerStyles.height
-                },
-                sidebar: {
-                    position: sidebarStyles.position,
-                    left: sidebarStyles.left,
-                    width: sidebarStyles.width,
-                    zIndex: sidebarStyles.zIndex,
-                    order: sidebarStyles.order,
-                    classes: sidebar.className
-                },
-                mainContent: {
-                    flex: mainContentStyles.flex,
-                    width: mainContentStyles.width,
-                    marginLeft: mainContentStyles.marginLeft,
-                    order: mainContentStyles.order
-                }
-            });
-
-            // Auto-fix if desktop layout is wrong
-            if (window.innerWidth > 768) {
-                if (sidebarStyles.position === 'fixed' || sidebarStyles.left !== 'auto') {
-                    console.log('🔧 AUTO-FIX: Desktop layout is wrong, forcing correct layout');
-                    forceDesktopLayout();
-                }
-            }
-        }
-
-        window.testLayout = testLayout;
 
         // NUCLEAR: Immediate desktop layout check
         function immediateDesktopCheck() {

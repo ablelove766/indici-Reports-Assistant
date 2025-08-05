@@ -1715,6 +1715,42 @@ body[data-teams-theme="dark"] .chat-message.assistant {
         z-index: auto !important;
     }
 
+    /* NUCLEAR: Ensure sidebar content is visible on desktop */
+    .sidebar .sidebar-header,
+    .sidebar .sidebar-content,
+    .sidebar .nav-section,
+    .sidebar .nav-items,
+    .sidebar .nav-item,
+    .sidebar .nav-link {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    .sidebar .sidebar-content {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        padding: 20px 16px !important;
+        min-height: 200px !important;
+    }
+
+    /* NUCLEAR: Force sidebar background and content visibility */
+    .sidebar:not(.hidden) {
+        background: linear-gradient(180deg, #464775 0%, #6264a7 100%) !important;
+        color: white !important;
+    }
+
+    .sidebar:not(.hidden) .sidebar-header {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+        padding: 24px 20px !important;
+    }
+
+    .sidebar:not(.hidden) .sidebar-content {
+        background: transparent !important;
+    }
+
     /* NUCLEAR: When sidebar is hidden */
     .sidebar.hidden,
     .app-container .sidebar.hidden {
@@ -1728,11 +1764,35 @@ body[data-teams-theme="dark"] .chat-message.assistant {
         opacity: 0 !important;
     }
 
+    /* NUCLEAR: When sidebar is hidden - full width content */
     .sidebar.hidden + .main-content,
-    .app-container:has(.sidebar.hidden) .main-content {
+    .app-container:has(.sidebar.hidden) .main-content,
+    .app-container .sidebar.hidden + .main-content,
+    .main-content:only-child,
+    body:not(:has(.sidebar:not(.hidden))) .main-content {
         width: 100% !important;
+        max-width: 100% !important;
         flex: 1 !important;
         margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* NUCLEAR: Force app container to single column when sidebar hidden */
+    .app-container:has(.sidebar.hidden),
+    .app-container:not(:has(.sidebar:not(.hidden))) {
+        display: flex !important;
+        flex-direction: row !important;
+        width: 100% !important;
+    }
+
+    .app-container:has(.sidebar.hidden) .main-content,
+    .app-container:not(:has(.sidebar:not(.hidden))) .main-content {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        flex: 1 !important;
+        order: 1 !important;
     }
 }
 
