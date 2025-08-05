@@ -64,6 +64,137 @@ window.openPrintWindow = function(printContent) {
     }
 };
 
+// Format print content into proper table structure
+function formatPrintContent(htmlContent) {
+    console.log('🖨️ TEAMS: Formatting print content for proper table structure');
+
+    // Create a temporary div to parse the HTML content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+
+    // Find all provider sections
+    const providerSections = tempDiv.querySelectorAll('h3, .provider-section, .provider-name');
+    let formattedHTML = '';
+
+    // If we can't find structured data, try to parse the raw content
+    if (providerSections.length === 0) {
+        // Parse the content to extract provider data
+        const lines = htmlContent.split('\n').filter(line => line.trim());
+        let currentProvider = '';
+        let providerData = {};
+
+        lines.forEach(line => {
+            const trimmedLine = line.trim();
+
+            // Check if this is a provider name (usually appears as a heading)
+            if (trimmedLine && !trimmedLine.includes('Age Range') && !trimmedLine.includes('Capitation') &&
+                !trimmedLine.includes('Quantity') && !trimmedLine.includes('Total') &&
+                !trimmedLine.match(/^\d/) && !trimmedLine.includes('0.00') &&
+                trimmedLine.length > 3 && !trimmedLine.includes('<')) {
+
+                if (currentProvider && providerData[currentProvider]) {
+                    // Process previous provider data
+                    formattedHTML += createProviderTable(currentProvider, providerData[currentProvider]);
+                }
+
+                currentProvider = trimmedLine.replace(/<[^>]*>/g, '').trim();
+                providerData[currentProvider] = [];
+            }
+            // Check if this is age range data
+            else if (trimmedLine.match(/^\d+[-\d\s]+/) || trimmedLine.includes('A3') || trimmedLine.includes('AZ') || trimmedLine.includes('C3') || trimmedLine.includes('Y3')) {
+                if (currentProvider) {
+                    const rowData = parseRowData(trimmedLine);
+                    if (rowData) {
+                        providerData[currentProvider].push(rowData);
+                    }
+                }
+            }
+        });
+
+        // Process the last provider
+        if (currentProvider && providerData[currentProvider]) {
+            formattedHTML += createProviderTable(currentProvider, providerData[currentProvider]);
+        }
+    }
+
+    return formattedHTML || htmlContent;
+}
+
+// Parse individual row data
+function parseRowData(line) {
+    // Remove HTML tags and clean the line
+    const cleanLine = line.replace(/<[^>]*>/g, '').trim();
+
+    // Try to extract age range, capitation amount, quantity, and total
+    const parts = cleanLine.split(/\s+/);
+
+    if (parts.length >= 4) {
+        const ageRange = parts[0];
+        const capAmount = parts[parts.length - 3] || '0.00';
+        const quantity = parts[parts.length - 2] || '0';
+        const totalAmount = parts[parts.length - 1] || '0.00';
+
+        return {
+            ageRange: ageRange,
+            capitation: parseFloat(capAmount) || 0,
+            quantity: parseInt(quantity) || 0,
+            total: parseFloat(totalAmount) || 0
+        };
+    }
+
+    return null;
+}
+
+// Create formatted table for each provider
+function createProviderTable(providerName, data) {
+    if (!data || data.length === 0) return '';
+
+    let totalQuantity = 0;
+    let totalAmount = 0;
+
+    let tableRows = '';
+    data.forEach(row => {
+        totalQuantity += row.quantity;
+        totalAmount += row.total;
+
+        tableRows += `
+            <tr>
+                <td style="padding: 8px 12px; border: 1px solid #333; text-align: left;">${row.ageRange}</td>
+                <td style="padding: 8px 12px; border: 1px solid #333; text-align: right;">${row.capitation.toFixed(2)}</td>
+                <td style="padding: 8px 12px; border: 1px solid #333; text-align: center;">${row.quantity}</td>
+                <td style="padding: 8px 12px; border: 1px solid #333; text-align: right;">${row.total.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    return `
+        <div style="margin-bottom: 40px; page-break-inside: avoid;">
+            <h2 style="margin: 0 0 15px 0; padding: 10px 0; border-bottom: 2px solid #333; font-size: 18px; font-weight: bold; color: #333;">${providerName}</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 12px;">
+                <thead>
+                    <tr style="background-color: #f5f5f5;">
+                        <th style="padding: 12px; border: 1px solid #333; text-align: left; font-weight: bold; background-color: #f0f0f0;">Age Range</th>
+                        <th style="padding: 12px; border: 1px solid #333; text-align: center; font-weight: bold; background-color: #f0f0f0;">Capitation Amount</th>
+                        <th style="padding: 12px; border: 1px solid #333; text-align: center; font-weight: bold; background-color: #f0f0f0;">Quantity</th>
+                        <th style="padding: 12px; border: 1px solid #333; text-align: center; font-weight: bold; background-color: #f0f0f0;">Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #f9f9f9; font-weight: bold;">
+                        <td style="padding: 10px 12px; border: 1px solid #333; text-align: left; font-weight: bold;">Total</td>
+                        <td style="padding: 10px 12px; border: 1px solid #333; text-align: right;"></td>
+                        <td style="padding: 10px 12px; border: 1px solid #333; text-align: center; font-weight: bold;">${totalQuantity}</td>
+                        <td style="padding: 10px 12px; border: 1px solid #333; text-align: right; font-weight: bold;">${totalAmount.toFixed(2)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+}
+
 // Teams auto-print function - automatically opens browser print dialog
 function createTeamsAutoPrint(printContent) {
     console.log('🖨️ TEAMS: Creating auto-print view for Teams');
@@ -85,15 +216,16 @@ function createTeamsAutoPrint(printContent) {
         box-sizing: border-box;
     `;
 
-    // Format content for clean printing
+    // Format content for clean printing with proper table structure
+    const formattedContent = formatPrintContent(printContent);
     printContainer.innerHTML = `
         <div class="auto-print-content">
-            <div class="print-header" style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px;">
-                <h1 style="margin: 0; font-size: 24px; color: #333; font-weight: bold;">Provider Capitation Report</h1>
-                <p style="margin: 10px 0 0 0; color: #666; font-size: 12px;">Period Date: 1825-08-05 to 2025-08-05</p>
+            <div class="print-header" style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #333; padding-bottom: 20px;">
+                <h1 style="margin: 0; font-size: 28px; color: #333; font-weight: bold;">Provider Capitation Report</h1>
+                <p style="margin: 15px 0 0 0; color: #666; font-size: 14px; font-weight: 500;">Period Date: 1825-08-05 to 2025-08-05</p>
             </div>
             <div class="print-body">
-                ${printContent}
+                ${formattedContent}
             </div>
         </div>
     `;
@@ -116,57 +248,74 @@ function createTeamsAutoPrint(printContent) {
                 top: 0 !important;
                 width: 100% !important;
                 height: auto !important;
-                padding: 0 !important;
+                padding: 20px !important;
                 margin: 0 !important;
                 background: white !important;
-                font-size: 11px !important;
+                font-family: Arial, sans-serif !important;
+                font-size: 12px !important;
+                line-height: 1.4 !important;
+                color: #333 !important;
+            }
+            .auto-print-content {
+                width: 100% !important;
+                max-width: none !important;
             }
             .auto-print-content table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 15px 0;
-                font-size: 10px;
-                page-break-inside: avoid;
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin: 20px 0 !important;
+                font-size: 11px !important;
+                page-break-inside: avoid !important;
+                border: 1px solid #333 !important;
             }
             .auto-print-content table th {
                 background: #f0f0f0 !important;
                 color: #333 !important;
-                padding: 8px 6px;
-                text-align: left;
-                font-weight: bold;
-                border: 1px solid #333;
-                font-size: 10px;
+                padding: 10px 8px !important;
+                text-align: center !important;
+                font-weight: bold !important;
+                border: 1px solid #333 !important;
+                font-size: 11px !important;
+                vertical-align: middle !important;
             }
             .auto-print-content table td {
-                padding: 6px;
-                border: 1px solid #333;
+                padding: 8px !important;
+                border: 1px solid #333 !important;
                 background: white !important;
-                font-size: 10px;
+                font-size: 11px !important;
+                vertical-align: middle !important;
             }
-            .auto-print-content .provider-section {
-                margin: 15px 0;
-                page-break-inside: avoid;
+            .auto-print-content table tfoot td {
+                background: #f9f9f9 !important;
+                font-weight: bold !important;
             }
-            .auto-print-content .provider-section h3 {
-                margin: 0 0 10px 0;
-                color: #333;
-                font-size: 14px;
-                font-weight: bold;
-                border-bottom: 1px solid #333;
-                padding-bottom: 5px;
+            .auto-print-content h1 {
+                font-size: 24px !important;
+                margin: 0 0 10px 0 !important;
+                text-align: center !important;
+                color: #333 !important;
+                font-weight: bold !important;
+            }
+            .auto-print-content h2 {
+                font-size: 16px !important;
+                margin: 30px 0 15px 0 !important;
+                padding: 8px 0 !important;
+                border-bottom: 2px solid #333 !important;
+                color: #333 !important;
+                font-weight: bold !important;
             }
             .print-header {
-                border-bottom: 2px solid #333 !important;
-                margin-bottom: 15px !important;
-                page-break-after: avoid;
-            }
-            .print-header h1 {
-                font-size: 18px !important;
-                margin: 0 !important;
+                text-align: center !important;
+                margin-bottom: 30px !important;
+                border-bottom: 3px solid #333 !important;
+                padding-bottom: 20px !important;
+                page-break-after: avoid !important;
             }
             .print-header p {
-                font-size: 10px !important;
-                margin: 5px 0 0 0 !important;
+                margin: 15px 0 0 0 !important;
+                color: #666 !important;
+                font-size: 12px !important;
+                font-weight: 500 !important;
             }
         }
     `;
