@@ -64,89 +64,97 @@ window.openPrintWindow = function(printContent) {
     }
 };
 
-// Format print content into proper table structure
-function formatPrintContent(htmlContent) {
-    console.log('🖨️ TEAMS: Formatting print content for proper table structure');
+// Extract table data directly from the current page for MS Teams
+function extractAndFormatTableData() {
+    console.log('🖨️ TEAMS: Extracting table data directly from current page');
 
-    // Create a temporary div to parse the HTML content
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
+    // Look for tables in the latest chat message
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) {
+        console.log('🖨️ TEAMS: No chat messages found');
+        return '<p>No data available for printing</p>';
+    }
 
-    // Find all provider sections
-    const providerSections = tempDiv.querySelectorAll('h3, .provider-section, .provider-name');
+    const lastMessage = chatMessages.lastElementChild;
+    if (!lastMessage) {
+        console.log('🖨️ TEAMS: No last message found');
+        return '<p>No data available for printing</p>';
+    }
+
+    // Find all tables in the last message
+    const tables = lastMessage.querySelectorAll('table');
+    if (tables.length === 0) {
+        console.log('🖨️ TEAMS: No tables found in last message');
+        return '<p>No table data available for printing</p>';
+    }
+
     let formattedHTML = '';
+    let currentProvider = '';
 
-    // If we can't find structured data, try to parse the raw content
-    if (providerSections.length === 0) {
-        // Parse the content to extract provider data
-        const lines = htmlContent.split('\n').filter(line => line.trim());
-        let currentProvider = '';
-        let providerData = {};
+    // Process each table
+    tables.forEach((table, index) => {
+        console.log(`🖨️ TEAMS: Processing table ${index + 1}`);
 
-        lines.forEach(line => {
-            const trimmedLine = line.trim();
-
-            // Check if this is a provider name (usually appears as a heading)
-            if (trimmedLine && !trimmedLine.includes('Age Range') && !trimmedLine.includes('Capitation') &&
-                !trimmedLine.includes('Quantity') && !trimmedLine.includes('Total') &&
-                !trimmedLine.match(/^\d/) && !trimmedLine.includes('0.00') &&
-                trimmedLine.length > 3 && !trimmedLine.includes('<')) {
-
-                if (currentProvider && providerData[currentProvider]) {
-                    // Process previous provider data
-                    formattedHTML += createProviderTable(currentProvider, providerData[currentProvider]);
-                }
-
-                currentProvider = trimmedLine.replace(/<[^>]*>/g, '').trim();
-                providerData[currentProvider] = [];
+        // Try to find provider name from preceding elements
+        let providerElement = table.previousElementSibling;
+        while (providerElement) {
+            if (providerElement.tagName === 'H5' || providerElement.tagName === 'H4' ||
+                providerElement.tagName === 'H3' || providerElement.tagName === 'STRONG' ||
+                (providerElement.textContent && providerElement.textContent.trim().length > 3 &&
+                 !providerElement.textContent.includes('Age Range') &&
+                 !providerElement.textContent.includes('Total Records'))) {
+                currentProvider = providerElement.textContent.trim();
+                break;
             }
-            // Check if this is age range data
-            else if (trimmedLine.match(/^\d+[-\d\s]+/) || trimmedLine.includes('A3') || trimmedLine.includes('AZ') || trimmedLine.includes('C3') || trimmedLine.includes('Y3')) {
-                if (currentProvider) {
-                    const rowData = parseRowData(trimmedLine);
-                    if (rowData) {
-                        providerData[currentProvider].push(rowData);
-                    }
-                }
-            }
-        });
-
-        // Process the last provider
-        if (currentProvider && providerData[currentProvider]) {
-            formattedHTML += createProviderTable(currentProvider, providerData[currentProvider]);
+            providerElement = providerElement.previousElementSibling;
         }
-    }
 
-    return formattedHTML || htmlContent;
+        // If no provider found, use a default
+        if (!currentProvider) {
+            currentProvider = `Provider ${index + 1}`;
+        }
+
+        // Extract table data
+        const tableData = extractTableRows(table);
+        if (tableData.length > 0) {
+            formattedHTML += createPrintTable(currentProvider, tableData);
+        }
+
+        // Reset for next table
+        currentProvider = '';
+    });
+
+    return formattedHTML || '<p>No valid table data found for printing</p>';
 }
 
-// Parse individual row data
-function parseRowData(line) {
-    // Remove HTML tags and clean the line
-    const cleanLine = line.replace(/<[^>]*>/g, '').trim();
+// Extract rows from a table element
+function extractTableRows(table) {
+    const rows = [];
+    const tableRows = table.querySelectorAll('tbody tr, tr');
 
-    // Try to extract age range, capitation amount, quantity, and total
-    const parts = cleanLine.split(/\s+/);
+    tableRows.forEach(row => {
+        const cells = row.querySelectorAll('td, th');
+        if (cells.length >= 4) { // Ensure we have at least 4 columns
+            const rowData = {
+                ageRange: cells[0].textContent.trim(),
+                capitation: parseFloat(cells[1].textContent.trim()) || 0,
+                quantity: parseInt(cells[2].textContent.trim()) || 0,
+                total: parseFloat(cells[3].textContent.trim()) || 0
+            };
 
-    if (parts.length >= 4) {
-        const ageRange = parts[0];
-        const capAmount = parts[parts.length - 3] || '0.00';
-        const quantity = parts[parts.length - 2] || '0';
-        const totalAmount = parts[parts.length - 1] || '0.00';
+            // Skip header rows
+            if (!rowData.ageRange.toLowerCase().includes('age range') &&
+                !rowData.ageRange.toLowerCase().includes('total')) {
+                rows.push(rowData);
+            }
+        }
+    });
 
-        return {
-            ageRange: ageRange,
-            capitation: parseFloat(capAmount) || 0,
-            quantity: parseInt(quantity) || 0,
-            total: parseFloat(totalAmount) || 0
-        };
-    }
-
-    return null;
+    return rows;
 }
 
-// Create formatted table for each provider
-function createProviderTable(providerName, data) {
+// Create a formatted print table
+function createPrintTable(providerName, data) {
     if (!data || data.length === 0) return '';
 
     let totalQuantity = 0;
@@ -195,6 +203,8 @@ function createProviderTable(providerName, data) {
     `;
 }
 
+
+
 // Teams auto-print function - automatically opens browser print dialog
 function createTeamsAutoPrint(printContent) {
     console.log('🖨️ TEAMS: Creating auto-print view for Teams');
@@ -216,8 +226,9 @@ function createTeamsAutoPrint(printContent) {
         box-sizing: border-box;
     `;
 
-    // Format content for clean printing with proper table structure
-    const formattedContent = formatPrintContent(printContent);
+    // Try to extract table data directly from the current page
+    const formattedContent = extractAndFormatTableData();
+
     printContainer.innerHTML = `
         <div class="auto-print-content">
             <div class="print-header" style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #333; padding-bottom: 20px;">
