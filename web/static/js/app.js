@@ -44,11 +44,11 @@ window.openPrintWindow = function(printContent) {
                    (window.microsoftTeams && typeof window.microsoftTeams === 'object');
 
     if (isTeams) {
-        // Teams-compatible print: Use current window with print styles
-        console.log('Teams environment detected, using inline print...');
-        createInlinePrintView(printContent);
+        // Teams-compatible print: Auto-open browser print dialog
+        console.log('Teams environment detected, using auto-print...');
+        createTeamsAutoPrint(printContent);
     } else {
-        // Regular browser: Try popup window first, fallback to inline
+        // Regular browser: Try popup window first, fallback to auto-print
         console.log('Regular browser, attempting popup window...');
         try {
             const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
@@ -58,13 +58,138 @@ window.openPrintWindow = function(printContent) {
                 throw new Error('Popup blocked');
             }
         } catch (error) {
-            console.log('Popup blocked, falling back to inline print...');
-            createInlinePrintView(printContent);
+            console.log('Popup blocked, falling back to auto-print...');
+            createTeamsAutoPrint(printContent);
         }
     }
 };
 
-// Teams-compatible modal print window function
+// Teams auto-print function - automatically opens browser print dialog
+function createTeamsAutoPrint(printContent) {
+    console.log('🖨️ TEAMS: Creating auto-print view for Teams');
+
+    // Create temporary print container
+    const printContainer = document.createElement('div');
+    printContainer.id = 'teams-auto-print-container';
+    printContainer.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        width: 210mm;
+        background: white;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #333;
+        padding: 20mm;
+        box-sizing: border-box;
+    `;
+
+    // Format content for clean printing
+    printContainer.innerHTML = `
+        <div class="auto-print-content">
+            <div class="print-header" style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px;">
+                <h1 style="margin: 0; font-size: 24px; color: #333; font-weight: bold;">Provider Capitation Report</h1>
+                <p style="margin: 10px 0 0 0; color: #666; font-size: 12px;">Period Date: 1825-08-05 to 2025-08-05</p>
+            </div>
+            <div class="print-body">
+                ${printContent}
+            </div>
+        </div>
+    `;
+
+    // Add print-specific styles
+    const printStyles = document.createElement('style');
+    printStyles.id = 'teams-auto-print-styles';
+    printStyles.innerHTML = `
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #teams-auto-print-container,
+            #teams-auto-print-container * {
+                visibility: visible;
+            }
+            #teams-auto-print-container {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+                font-size: 11px !important;
+            }
+            .auto-print-content table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+                font-size: 10px;
+                page-break-inside: avoid;
+            }
+            .auto-print-content table th {
+                background: #f0f0f0 !important;
+                color: #333 !important;
+                padding: 8px 6px;
+                text-align: left;
+                font-weight: bold;
+                border: 1px solid #333;
+                font-size: 10px;
+            }
+            .auto-print-content table td {
+                padding: 6px;
+                border: 1px solid #333;
+                background: white !important;
+                font-size: 10px;
+            }
+            .auto-print-content .provider-section {
+                margin: 15px 0;
+                page-break-inside: avoid;
+            }
+            .auto-print-content .provider-section h3 {
+                margin: 0 0 10px 0;
+                color: #333;
+                font-size: 14px;
+                font-weight: bold;
+                border-bottom: 1px solid #333;
+                padding-bottom: 5px;
+            }
+            .print-header {
+                border-bottom: 2px solid #333 !important;
+                margin-bottom: 15px !important;
+                page-break-after: avoid;
+            }
+            .print-header h1 {
+                font-size: 18px !important;
+                margin: 0 !important;
+            }
+            .print-header p {
+                font-size: 10px !important;
+                margin: 5px 0 0 0 !important;
+            }
+        }
+    `;
+    document.head.appendChild(printStyles);
+    document.body.appendChild(printContainer);
+
+    // Auto-trigger print dialog after a short delay
+    setTimeout(() => {
+        console.log('🖨️ TEAMS: Auto-triggering browser print dialog');
+        window.print();
+
+        // Clean up after printing
+        setTimeout(() => {
+            const container = document.getElementById('teams-auto-print-container');
+            const styles = document.getElementById('teams-auto-print-styles');
+            if (container) container.remove();
+            if (styles) styles.remove();
+            console.log('🖨️ TEAMS: Auto-print cleanup completed');
+        }, 1000);
+    }, 500);
+}
+
+// Teams-compatible modal print window function (DEPRECATED - keeping for fallback)
 function createInlinePrintView(printContent) {
     console.log('🖨️ TEAMS: Creating Teams-compatible print modal window');
 
@@ -529,7 +654,7 @@ function createPopupPrintWindow(printWindow, printContent) {
             setTimeout(() => {
                 window.print();
                 console.log('Print dialog triggered automatically');
-            }, 1000);
+            }, 500);
         };
     </script>
 </body>
