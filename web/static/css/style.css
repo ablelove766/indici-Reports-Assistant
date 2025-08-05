@@ -1460,7 +1460,7 @@ body[data-teams-theme="dark"] .chat-message.assistant {
         height: 100vh !important;
         background: linear-gradient(180deg, #464775 0%, #6264a7 100%) !important;
         color: white !important;
-        border-right: 1px solid #e1dfdd !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
         z-index: 1000 !important;
         transition: left 0.3s ease !important;
         overflow-y: auto !important;
@@ -1794,8 +1794,8 @@ body[data-teams-theme="dark"] .chat-message.assistant {
         width: 280px;
         height: 100vh;
         transform: translateX(-100%);
-        border-right: 1px solid #e1dfdd;
-        background: #f3f2f1;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(180deg, #464775 0%, #6264a7 100%);
         z-index: 1000;
     }
 
@@ -1859,8 +1859,8 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     flex-shrink: 0;
     height: 100vh;
     overflow-y: auto;
-    background: #f3f2f1; /* Teams background */
-    border-right: 1px solid #e1dfdd;
+    background: linear-gradient(180deg, #464775 0%, #6264a7 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Teams Navigation Styling */
