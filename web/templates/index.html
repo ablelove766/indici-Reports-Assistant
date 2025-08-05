@@ -284,47 +284,12 @@
 
 
 
-                    <div class="nav-section">
-                        <h3><i class="fas fa-cog"></i> Tools</h3>
-                        <ul class="nav-items">
-                            <li class="nav-item">
-                                <a href="#" class="nav-link" onclick="clearChat()">
-                                    <i class="fas fa-broom"></i>
-                                    <span>Clear Chat</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link" onclick="exportChat()">
-                                    <i class="fas fa-download"></i>
-                                    <span>Export Chat</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+
                 </nav>
 
-                <!-- Dynamic Content (Hidden by default) -->
-                <div class="dynamic-content" style="display: none;">
-                    <div class="section">
-                        <h3><i class="fas fa-lightbulb"></i> Sample Queries</h3>
-                        <div id="sample-queries" class="sample-queries">
-                            <div class="loading">Loading samples...</div>
-                        </div>
-                    </div>
 
-                    <div class="section">
-                        <div id="sidebar-sections" class="sidebar-sections">
-                            <div class="loading">Loading menu...</div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="section">
-                    <h3><i class="fas fa-info-circle"></i> System Info</h3>
-                    <div id="system-info" class="system-info">
-                        <div class="loading">Loading system info...</div>
-                    </div>
-                </div>
+
                 
 
             </div>
@@ -426,17 +391,9 @@
             }
         };
 
-        window.clearChat = window.clearChat || function() {
-            console.log('🚨 EMERGENCY: clearChat called');
-            const chatMessages = document.getElementById('chat-messages');
-            if (chatMessages) {
-                chatMessages.innerHTML = '';
-            }
-        };
 
-        window.exportChat = window.exportChat || function() {
-            console.log('🚨 EMERGENCY: exportChat called');
-        };
+
+
 
         window.toggleSidebar = window.toggleSidebar || function() {
             console.log('🚨 EMERGENCY: toggleSidebar called');
@@ -1595,31 +1552,7 @@
             }
         }
 
-        // Export chat function
-        function exportChat() {
-            const chatMessages = document.querySelectorAll('.chat-message');
-            let chatText = 'Indici Reports Assistant Chat Export\n';
-            chatText += '=====================================\n\n';
 
-            chatMessages.forEach(message => {
-                const isUser = message.classList.contains('user-message');
-                const text = message.querySelector('.message-text').textContent;
-                const timestamp = message.querySelector('.message-time').textContent;
-
-                chatText += `${isUser ? 'User' : 'Assistant'} [${timestamp}]:\n${text}\n\n`;
-            });
-
-            // Create and download file
-            const blob = new Blob([chatText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `indici-chat-${new Date().toISOString().split('T')[0]}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
 
         // BULLETPROOF Mobile Nav Initialization for Real Mobile Devices
         function initializeMobileNav() {

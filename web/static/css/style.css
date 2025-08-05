@@ -326,11 +326,7 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     color: rgba(255, 255, 255, 0.9);
 }
 
-.sample-queries {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
+
 
 .sample-query {
     background: rgba(255, 255, 255, 0.1);
@@ -459,12 +455,7 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Sidebar Sections */
-.sidebar-sections {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
+
 
 .collapsible-section {
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -634,12 +625,7 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     transform: translateY(-1px);
 }
 
-/* System Info Section */
-.system-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
+
 
 .info-item {
     padding: var(--spacing-sm);

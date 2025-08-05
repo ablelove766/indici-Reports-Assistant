@@ -1028,52 +1028,13 @@ class IndiciChatApp {
             const response = await fetch('/api/system-status');
             const data = await response.json();
 
-            if (data.configuration) {
-                this.updateSystemInfo(data);
-            }
+
         } catch (error) {
             console.error('Error loading system status:', error);
         }
     }
 
-    updateSystemInfo(status) {
-        const container = document.getElementById('system-info');
 
-        if (container && status.configuration) {
-            const config = status.configuration;
-            const approach = config.current_approach;
-
-            let approachText = '';
-            if (approach === 'intent_only') {
-                approachText = '🎯 Intent Classification Only';
-            } else if (approach === 'groq_only') {
-                approachText = '🤖 Groq LLM Only';
-            } else if (approach === 'qwen_only') {
-                approachText = '🧠 QWEN LLM Only';
-            } else if (approach === 'multiple_enabled') {
-                approachText = '🔄 Multiple Approaches Enabled';
-            } else if (approach === 'llm_only') {
-                approachText = '🤖 LLM Processing Only';
-            } else if (approach === 'both_enabled') {
-                approachText = '🔄 Both Approaches Enabled';
-            } else {
-                approachText = '❌ No Approach Enabled';
-            }
-
-            container.innerHTML = `
-                <div class="info-item">
-                    <strong>Current Approach:</strong><br>
-                    ${approachText}
-                </div>
-                <div class="info-item">
-                    <strong>Menu Items:</strong> ${config.sidebar_items_count}
-                </div>
-                <div class="info-note">
-                    Configure in chatbot_config.json
-                </div>
-            `;
-        }
-    }
 
     showNotification(message, type = 'info') {
         // Create notification element
