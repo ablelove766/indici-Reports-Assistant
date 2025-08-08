@@ -211,33 +211,61 @@ def auth_callback():
 @app.route('/auth/token-exchange', methods=['POST'])
 def token_exchange():
     """Exchange Teams token for application token (On-Behalf-Of flow)."""
+    logger.info("🔄 Token exchange endpoint called")
+    logger.debug(f"   Request headers: {dict(request.headers)}")
+    logger.debug(f"   Request method: {request.method}")
+    logger.debug(f"   Request URL: {request.url}")
+    logger.debug(f"   Request remote addr: {request.remote_addr}")
+
     try:
         data = request.get_json()
-        teams_token = data.get('token')
+        logger.debug(f"   Request data keys: {list(data.keys()) if data else 'No data'}")
+
+        teams_token = data.get('token') if data else None
 
         if not teams_token:
+            logger.error("❌ No Teams token provided in request")
             return jsonify({"error": "Teams token required"}), 400
 
+        logger.info(f"   Teams token received (first 50 chars): {teams_token[:50]}...")
+
         # Validate Teams token
+        logger.info("🔍 Step 1: Validating Teams token...")
         user_payload = auth_manager.validate_teams_token(teams_token)
         if not user_payload:
+            logger.error("❌ Teams token validation failed")
             return jsonify({"error": "Invalid Teams token"}), 401
 
+        logger.info(f"✅ Teams token validated for user: {user_payload.get('preferred_username', 'Unknown')}")
+
         # Exchange for Graph token
+        logger.info("🔄 Step 2: Exchanging Teams token for Graph token...")
         graph_token = auth_manager.exchange_token_for_graph_token(teams_token)
         if not graph_token:
-            return jsonify({"error": "Token exchange failed"}), 500
+            logger.error("❌ Token exchange failed - this is likely the CAA20004 error")
+            return jsonify({
+                "error": "Token exchange failed",
+                "details": "This is likely due to missing admin consent. Check Azure AD app permissions."
+            }), 500
+
+        logger.info("✅ Graph token obtained successfully")
 
         # Get user info from Graph
+        logger.info("🔄 Step 3: Getting user info from Microsoft Graph...")
         user_info = auth_manager.get_user_info_from_graph(graph_token)
         if not user_info:
+            logger.error("❌ Failed to get user info from Graph API")
             return jsonify({"error": "Failed to get user info"}), 500
 
+        logger.info(f"✅ User info obtained: {user_info.get('displayName', 'Unknown')}")
+
         # Store in session
+        logger.info("💾 Storing tokens and user info in session...")
         session['access_token'] = graph_token
         session['user_info'] = user_info
         session['teams_token'] = teams_token
 
+        logger.info("✅ Token exchange completed successfully!")
         return jsonify({
             "success": True,
             "user": {
@@ -249,10 +277,14 @@ def token_exchange():
         })
 
     except Exception as e:
-        logger.error(f"Error in token exchange: {e}")
+        logger.error(f"❌ Exception in token exchange: {e}")
+        logger.error(f"   Exception type: {type(e).__name__}")
+        import traceback
+        logger.error(f"   Traceback: {traceback.format_exc()}")
         return jsonify({
             "error": "Token exchange failed",
-            "success": False
+            "success": False,
+            "details": str(e)
         }), 500
 
 @app.route('/auth/user')

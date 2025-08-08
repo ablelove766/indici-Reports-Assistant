@@ -24,7 +24,7 @@
     "client_id": "",
     "client_secret": "",
     "tenant_id": "",
-    "authority": "",
+    "authority": "https://login.microsoftonline.com/82b5691e-b842-4527-b212-041c19c48d3e",
     "scope": "https://graph.microsoft.com/.default",
     "redirect_uri": "https://indici-reports-assistant.onrender.com/auth/callback"
   },

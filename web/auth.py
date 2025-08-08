@@ -10,6 +10,20 @@ from typing import Dict, Any, Optional
 from flask import request, jsonify, session, g
 import sys
 
+# Configure detailed logging for SSO debugging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('sso_debug.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# Create specific logger for SSO operations
+sso_logger = logging.getLogger('teams_sso')
+sso_logger.setLevel(logging.DEBUG)
+
 # Import JWT with error handling
 try:
     import jwt
@@ -59,26 +73,53 @@ from mcp_server.config import config
 logger = logging.getLogger(__name__)
 
 class TeamsAuthManager:
-    """Microsoft Teams SSO Authentication Manager."""
-    
+    """Microsoft Teams SSO Authentication Manager with comprehensive logging."""
+
     def __init__(self):
         """Initialize Teams authentication manager."""
+        sso_logger.info("🔧 Initializing TeamsAuthManager...")
+
         self.client_id = config.azure_client_id
         self.client_secret = config.azure_client_secret
         self.tenant_id = config.azure_tenant_id
         self.authority = config.azure_authority
         self.scope = config.azure_scope
-        
+
+        # Log configuration (mask sensitive data)
+        sso_logger.info(f"📋 Azure AD Configuration:")
+        sso_logger.info(f"   Client ID: {self.client_id}")
+        sso_logger.info(f"   Tenant ID: {self.tenant_id}")
+        sso_logger.info(f"   Authority: {self.authority}")
+        sso_logger.info(f"   Scope: {self.scope}")
+        sso_logger.info(f"   Client Secret: {'*' * (len(self.client_secret) - 4) + self.client_secret[-4:] if self.client_secret else 'NOT SET'}")
+
+        # Validate configuration
+        if not all([self.client_id, self.client_secret, self.tenant_id, self.authority]):
+            sso_logger.error("❌ Missing required Azure AD configuration!")
+            sso_logger.error(f"   Client ID: {'✅' if self.client_id else '❌'}")
+            sso_logger.error(f"   Client Secret: {'✅' if self.client_secret else '❌'}")
+            sso_logger.error(f"   Tenant ID: {'✅' if self.tenant_id else '❌'}")
+            sso_logger.error(f"   Authority: {'✅' if self.authority else '❌'}")
+            raise ValueError("Missing required Azure AD configuration")
+
         # Initialize MSAL client
-        self.msal_app = ConfidentialClientApplication(
-            client_id=self.client_id,
-            client_credential=self.client_secret,
-            authority=self.authority
-        )
-        
+        try:
+            sso_logger.info("🔐 Initializing MSAL client...")
+            self.msal_app = ConfidentialClientApplication(
+                client_id=self.client_id,
+                client_credential=self.client_secret,
+                authority=self.authority
+            )
+            sso_logger.info("✅ MSAL client initialized successfully")
+        except Exception as e:
+            sso_logger.error(f"❌ Failed to initialize MSAL client: {e}")
+            raise
+
         # Cache for JWT public keys
         self._jwt_keys_cache = {}
         self._jwt_keys_cache_expiry = None
+
+        sso_logger.info("✅ TeamsAuthManager initialized successfully")
         
     async def get_jwt_public_keys(self) -> Dict[str, Any]:
         """Get JWT public keys from Microsoft's well-known endpoint."""
@@ -216,34 +257,88 @@ class TeamsAuthManager:
     
     def exchange_token_for_graph_token(self, teams_token: str) -> Optional[str]:
         """Exchange Teams token for Microsoft Graph token using On-Behalf-Of flow."""
+        sso_logger.info("🔄 Starting token exchange using On-Behalf-Of flow...")
+        sso_logger.debug(f"   Teams token (first 50 chars): {teams_token[:50]}...")
+
         try:
-            logger.info("Attempting token exchange using On-Behalf-Of flow")
+            # Log the configuration being used
+            sso_logger.info("📋 Token exchange configuration:")
+            sso_logger.info(f"   Client ID: {self.client_id}")
+            sso_logger.info(f"   Tenant ID: {self.tenant_id}")
+            sso_logger.info(f"   Authority: {self.authority}")
+            sso_logger.info(f"   Scope: {self.scope}")
+
+            # Validate Teams token first
+            sso_logger.info("🔍 Step 1: Validating Teams token structure...")
+            try:
+                # Decode without verification to check structure
+                header = jwt.get_unverified_header(teams_token)
+                payload = jwt.decode(teams_token, options={"verify_signature": False})
+
+                sso_logger.info(f"   Token header: {header}")
+                sso_logger.info(f"   Token issuer: {payload.get('iss', 'Unknown')}")
+                sso_logger.info(f"   Token audience: {payload.get('aud', 'Unknown')}")
+                sso_logger.info(f"   Token subject: {payload.get('sub', 'Unknown')}")
+                sso_logger.info(f"   Token expiry: {payload.get('exp', 'Unknown')}")
+
+                # Check if token is for the correct audience
+                expected_audience = f"api://indici-reports-assistant.onrender.com/{self.client_id}"
+                actual_audience = payload.get('aud')
+                if actual_audience != expected_audience:
+                    sso_logger.warning(f"⚠️ Audience mismatch!")
+                    sso_logger.warning(f"   Expected: {expected_audience}")
+                    sso_logger.warning(f"   Actual: {actual_audience}")
+
+            except Exception as token_decode_error:
+                sso_logger.error(f"❌ Failed to decode Teams token: {token_decode_error}")
 
             # Use MSAL to perform On-Behalf-Of flow
+            sso_logger.info("🔄 Step 2: Performing MSAL On-Behalf-Of flow...")
             result = self.msal_app.acquire_token_on_behalf_of(
                 user_assertion=teams_token,
                 scopes=[self.scope]
             )
 
+            sso_logger.debug(f"   MSAL result keys: {list(result.keys())}")
+
             if "access_token" in result:
-                logger.info("Successfully exchanged Teams token for Graph token")
+                sso_logger.info("✅ Token exchange successful!")
+                sso_logger.debug(f"   Access token (first 20 chars): {result['access_token'][:20]}...")
+                sso_logger.debug(f"   Token expires in: {result.get('expires_in', 'Unknown')} seconds")
                 return result["access_token"]
             else:
-                error_desc = result.get('error_description', 'Unknown error')
                 error_code = result.get('error', 'unknown_error')
-                logger.warning(f"Token exchange failed: {error_code} - {error_desc}")
+                error_desc = result.get('error_description', 'Unknown error')
+                correlation_id = result.get('correlation_id', 'No correlation ID')
+
+                sso_logger.error("❌ Token exchange failed!")
+                sso_logger.error(f"   Error code: {error_code}")
+                sso_logger.error(f"   Error description: {error_desc}")
+                sso_logger.error(f"   Correlation ID: {correlation_id}")
+                sso_logger.error(f"   Full MSAL result: {result}")
+
+                # Specific error handling for CAA20004
+                if "CAA20004" in error_desc or "AADSTS650057" in error_desc:
+                    sso_logger.error("🚨 CAA20004 Error Detected!")
+                    sso_logger.error("   This indicates missing admin consent for the API scope")
+                    sso_logger.error("   Required action: Grant admin consent in Azure Portal")
+                    sso_logger.error(f"   Go to: https://portal.azure.com → App registrations → {self.client_id} → API permissions")
+                    sso_logger.error("   Click: 'Grant admin consent for [organization]'")
 
                 # For development/testing, we might want to continue without Graph token
                 # In production, this should be handled based on your requirements
                 if error_code in ['invalid_grant', 'interaction_required']:
-                    logger.info("Token exchange failed but continuing with Teams token only")
+                    sso_logger.info("Token exchange failed but continuing with Teams token only")
                     return None
                 else:
-                    logger.error(f"Critical token exchange error: {error_code}")
+                    sso_logger.error(f"Critical token exchange error: {error_code}")
                     return None
 
         except Exception as e:
-            logger.error(f"Token exchange error: {e}")
+            sso_logger.error(f"❌ Exception during token exchange: {e}")
+            sso_logger.error(f"   Exception type: {type(e).__name__}")
+            import traceback
+            sso_logger.error(f"   Traceback: {traceback.format_exc()}")
             return None
     
     def get_user_info_from_graph(self, graph_token: str) -> Optional[Dict[str, Any]]:
