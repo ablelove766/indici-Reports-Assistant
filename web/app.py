@@ -133,6 +133,11 @@ def teams_config():
     """Teams tab configuration page."""
     return render_template('teams_config.html')
 
+@app.route('/teams/debug')
+def teams_debug():
+    """Microsoft Teams SSO debug page."""
+    return render_template('teams_debug.html')
+
 @app.route('/teams/privacy')
 def teams_privacy():
     """Teams privacy policy page."""

@@ -20,30 +20,51 @@ class TeamsAuthManager {
      */
     async initializeTeamsSDK() {
         try {
-            console.log('🔐 Initializing Teams SDK for SSO...');
-            
+            console.log('🔐 [TeamsAuth] Initializing Teams SDK for SSO...');
+            console.log('🔍 [TeamsAuth] Current URL:', window.location.href);
+            console.log('🔍 [TeamsAuth] User Agent:', navigator.userAgent);
+
             // Check if Teams SDK is available
             if (typeof microsoftTeams === 'undefined') {
-                console.warn('⚠️ Teams SDK not available, running in standalone mode');
+                console.warn('⚠️ [TeamsAuth] Teams SDK not available, running in standalone mode');
                 this.isInitialized = true;
                 return;
             }
-            
-            // Initialize Teams SDK
+
+            console.log('✅ [TeamsAuth] Teams SDK found, version:', microsoftTeams.version || 'unknown');
+
+            // Wait a bit to ensure Teams SDK is fully loaded
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Check if already initialized by the main template
+            if (window.teamsContext) {
+                console.log('✅ [TeamsAuth] Using existing Teams context from main template');
+                this.teamsContext = window.teamsContext;
+                this.isInitialized = true;
+
+                // Attempt silent authentication
+                await this.performSilentAuth();
+                return;
+            }
+
+            // Initialize Teams SDK if not already done
+            console.log('🔄 [TeamsAuth] Initializing Teams SDK...');
             await microsoftTeams.app.initialize();
-            console.log('✅ Teams SDK initialized successfully');
-            
+            console.log('✅ [TeamsAuth] Teams SDK initialized successfully');
+
             // Get Teams context
+            console.log('🔄 [TeamsAuth] Getting Teams context...');
             this.teamsContext = await microsoftTeams.app.getContext();
-            console.log('📋 Teams context:', this.teamsContext);
-            
+            console.log('📋 [TeamsAuth] Teams context received:', this.teamsContext);
+
             this.isInitialized = true;
-            
+
             // Attempt silent authentication
             await this.performSilentAuth();
-            
+
         } catch (error) {
-            console.error('❌ Failed to initialize Teams SDK:', error);
+            console.error('❌ [TeamsAuth] Failed to initialize Teams SDK:', error);
+            console.error('❌ [TeamsAuth] Error details:', error.message, error.stack);
             this.isInitialized = true; // Continue without Teams features
         }
     }
@@ -53,30 +74,48 @@ class TeamsAuthManager {
      */
     async performSilentAuth() {
         try {
-            console.log('🔐 Attempting silent authentication...');
-            
+            console.log('🔐 [TeamsAuth] Attempting silent authentication...');
+            console.log('🔍 [TeamsAuth] Teams context available:', !!this.teamsContext);
+            console.log('🔍 [TeamsAuth] Teams SDK available:', typeof microsoftTeams !== 'undefined');
+
             if (typeof microsoftTeams === 'undefined') {
-                console.log('⚠️ Teams SDK not available, skipping silent auth');
+                console.log('⚠️ [TeamsAuth] Teams SDK not available, skipping silent auth');
                 return false;
             }
-            
+
+            // Check if we're actually running in Teams
+            const isInTeams = this.teamsContext && this.teamsContext.app && this.teamsContext.app.host;
+            console.log('🔍 [TeamsAuth] Running in Teams:', isInTeams);
+            console.log('🔍 [TeamsAuth] Host info:', this.teamsContext?.app?.host);
+
+            if (!isInTeams) {
+                console.log('⚠️ [TeamsAuth] Not running in Teams environment, skipping SSO');
+                return false;
+            }
+
+            console.log('🔄 [TeamsAuth] Requesting Teams SSO token...');
+
             // Request Teams SSO token
             const authTokenRequest = {
                 successCallback: async (token) => {
-                    console.log('✅ Teams SSO token received');
+                    console.log('✅ [TeamsAuth] Teams SSO token received successfully');
+                    console.log('🔍 [TeamsAuth] Token length:', token ? token.length : 0);
                     await this.handleTeamsToken(token);
                 },
                 failureCallback: (error) => {
-                    console.warn('⚠️ Silent auth failed:', error);
+                    console.warn('⚠️ [TeamsAuth] Silent auth failed:', error);
+                    console.error('❌ [TeamsAuth] Auth failure details:', error);
                     this.handleAuthFailure(error);
                 }
             };
-            
+
             // Use Teams SDK to get SSO token
+            console.log('🔄 [TeamsAuth] Calling microsoftTeams.authentication.getAuthToken...');
             microsoftTeams.authentication.getAuthToken(authTokenRequest);
-            
+
         } catch (error) {
-            console.error('❌ Silent authentication error:', error);
+            console.error('❌ [TeamsAuth] Silent authentication error:', error);
+            console.error('❌ [TeamsAuth] Error details:', error.message, error.stack);
             this.handleAuthFailure(error);
             return false;
         }
@@ -87,8 +126,17 @@ class TeamsAuthManager {
      */
     async handleTeamsToken(teamsToken) {
         try {
-            console.log('🔄 Exchanging Teams token for Graph token...');
-            
+            console.log('🔄 [TeamsAuth] Exchanging Teams token for Graph token...');
+            console.log('🔍 [TeamsAuth] Token preview (first 50 chars):', teamsToken ? teamsToken.substring(0, 50) + '...' : 'null');
+
+            if (!teamsToken) {
+                console.error('❌ [TeamsAuth] No Teams token provided');
+                this.handleAuthFailure('No Teams token provided');
+                return false;
+            }
+
+            console.log('🔄 [TeamsAuth] Sending token exchange request to /auth/token-exchange');
+
             // Exchange Teams token for Graph token via backend
             const response = await fetch('/auth/token-exchange', {
                 method: 'POST',
@@ -100,27 +148,40 @@ class TeamsAuthManager {
                     token: teamsToken
                 })
             });
-            
+
+            console.log('🔍 [TeamsAuth] Token exchange response status:', response.status);
+            console.log('🔍 [TeamsAuth] Token exchange response headers:', Object.fromEntries(response.headers.entries()));
+
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅ Token exchange successful');
-                
+                console.log('✅ [TeamsAuth] Token exchange successful');
+                console.log('🔍 [TeamsAuth] Response data:', data);
+
                 this.currentUser = data.user;
                 this.accessToken = teamsToken; // Store Teams token
-                
+
                 // Notify authentication success
                 this.notifyAuthSuccess(data.user);
-                
+
                 return true;
             } else {
-                const errorData = await response.json();
-                console.error('❌ Token exchange failed:', errorData);
+                const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+                console.error('❌ [TeamsAuth] Token exchange failed with status:', response.status);
+                console.error('❌ [TeamsAuth] Error response:', errorData);
+
+                // Show user-friendly error for CAA20004
+                if (errorData.error && errorData.error.includes('CAA20004')) {
+                    console.error('🚨 [TeamsAuth] CAA20004 Error - Admin consent required!');
+                    console.error('🔧 [TeamsAuth] Please grant admin consent in Azure Portal');
+                }
+
                 this.handleAuthFailure(errorData);
                 return false;
             }
-            
+
         } catch (error) {
-            console.error('❌ Error handling Teams token:', error);
+            console.error('❌ [TeamsAuth] Error handling Teams token:', error);
+            console.error('❌ [TeamsAuth] Error details:', error.message, error.stack);
             this.handleAuthFailure(error);
             return false;
         }
@@ -246,11 +307,11 @@ class TeamsAuthManager {
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             // Clear local state
             this.currentUser = null;
             this.accessToken = null;
-            
+
             // Notify callbacks
             this.authCallbacks.forEach(callback => {
                 try {
@@ -259,11 +320,31 @@ class TeamsAuthManager {
                     console.error('Error in auth callback:', e);
                 }
             });
-            
-            console.log('✅ Logout successful');
-            
+
+            console.log('✅ [TeamsAuth] Logout successful');
+
         } catch (error) {
-            console.error('❌ Logout error:', error);
+            console.error('❌ [TeamsAuth] Logout error:', error);
+        }
+    }
+
+    /**
+     * Debug function to manually trigger authentication
+     */
+    async debugAuth() {
+        console.log('🧪 [TeamsAuth] Manual authentication debug triggered');
+        console.log('🔍 [TeamsAuth] Current state:');
+        console.log('   - Initialized:', this.isInitialized);
+        console.log('   - Teams SDK available:', typeof microsoftTeams !== 'undefined');
+        console.log('   - Teams context:', this.teamsContext);
+        console.log('   - Current user:', this.currentUser);
+        console.log('   - Access token:', !!this.accessToken);
+
+        if (typeof microsoftTeams !== 'undefined') {
+            console.log('🔄 [TeamsAuth] Attempting manual authentication...');
+            await this.performSilentAuth();
+        } else {
+            console.log('❌ [TeamsAuth] Teams SDK not available for manual auth');
         }
     }
 }

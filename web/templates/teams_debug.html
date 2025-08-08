@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams SSO Debug - Indici Reports Assistant</title>
+    
+    <!-- Microsoft Teams SDK -->
+    <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .debug-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background-color: #d4edda; color: #155724; }
+        .status.warning { background-color: #fff3cd; color: #856404; }
+        .status.error { background-color: #f8d7da; color: #721c24; }
+        .status.info { background-color: #d1ecf1; color: #0c5460; }
+        
+        button {
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #106ebe;
+        }
+        
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .log-output {
+            height: 200px;
+            overflow-y: auto;
+            background-color: #000;
+            color: #0f0;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🧪 Teams SSO Debug Tool</h1>
+        <p>This page helps debug Microsoft Teams SSO authentication issues.</p>
+        
+        <div class="debug-section">
+            <h3>🔍 Environment Check</h3>
+            <div id="env-status"></div>
+            <button onclick="checkEnvironment()">Check Environment</button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🔐 Teams Authentication</h3>
+            <div id="auth-status"></div>
+            <button onclick="testAuthentication()">Test Authentication</button>
+            <button onclick="manualTokenExchange()">Manual Token Exchange</button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>📋 Teams Context</h3>
+            <div id="context-info"></div>
+            <button onclick="getTeamsContext()">Get Teams Context</button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>📊 Debug Logs</h3>
+            <div id="log-output" class="log-output"></div>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+    </div>
+
+    <script>
+        // Debug logging
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        function addToLog(message, type = 'log') {
+            const logOutput = document.getElementById('log-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#f00' : type === 'warn' ? '#ff0' : '#0f0';
+            logOutput.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            addToLog(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            addToLog(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalConsoleWarn.apply(console, args);
+            addToLog(args.join(' '), 'warn');
+        };
+        
+        function clearLogs() {
+            document.getElementById('log-output').innerHTML = '';
+        }
+        
+        function setStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function checkEnvironment() {
+            console.log('🔍 Checking environment...');
+            
+            let status = '';
+            
+            // Check Teams SDK
+            if (typeof microsoftTeams !== 'undefined') {
+                status += '<div class="status success">✅ Teams SDK loaded</div>';
+                console.log('✅ Teams SDK version:', microsoftTeams.version || 'unknown');
+            } else {
+                status += '<div class="status error">❌ Teams SDK not loaded</div>';
+            }
+            
+            // Check URL
+            status += `<div class="status info">📍 Current URL: ${window.location.href}</div>`;
+            
+            // Check User Agent
+            const isTeamsClient = navigator.userAgent.includes('Teams');
+            if (isTeamsClient) {
+                status += '<div class="status success">✅ Running in Teams client</div>';
+            } else {
+                status += '<div class="status warning">⚠️ Not running in Teams client</div>';
+            }
+            
+            setStatus('env-status', status);
+        }
+        
+        async function getTeamsContext() {
+            console.log('📋 Getting Teams context...');
+            
+            if (typeof microsoftTeams === 'undefined') {
+                setStatus('context-info', '<div class="status error">❌ Teams SDK not available</div>');
+                return;
+            }
+            
+            try {
+                await microsoftTeams.app.initialize();
+                const context = await microsoftTeams.app.getContext();
+                
+                console.log('📋 Teams context received:', context);
+                
+                const contextHtml = `
+                    <div class="status success">✅ Teams context retrieved</div>
+                    <pre>${JSON.stringify(context, null, 2)}</pre>
+                `;
+                
+                setStatus('context-info', contextHtml);
+                
+            } catch (error) {
+                console.error('❌ Failed to get Teams context:', error);
+                setStatus('context-info', `<div class="status error">❌ Error: ${error.message}</div>`);
+            }
+        }
+        
+        async function testAuthentication() {
+            console.log('🔐 Testing Teams authentication...');
+            
+            if (typeof microsoftTeams === 'undefined') {
+                setStatus('auth-status', '<div class="status error">❌ Teams SDK not available</div>');
+                return;
+            }
+            
+            try {
+                await microsoftTeams.app.initialize();
+                
+                console.log('🔄 Requesting Teams SSO token...');
+                
+                microsoftTeams.authentication.getAuthToken({
+                    successCallback: (token) => {
+                        console.log('✅ Teams SSO token received');
+                        console.log('🔍 Token length:', token.length);
+                        console.log('🔍 Token preview:', token.substring(0, 50) + '...');
+                        
+                        setStatus('auth-status', `
+                            <div class="status success">✅ Teams SSO token received</div>
+                            <div class="status info">Token length: ${token.length}</div>
+                            <div class="status info">Token preview: ${token.substring(0, 50)}...</div>
+                        `);
+                        
+                        // Store token for manual exchange
+                        window.teamsToken = token;
+                    },
+                    failureCallback: (error) => {
+                        console.error('❌ Teams SSO failed:', error);
+                        setStatus('auth-status', `<div class="status error">❌ SSO failed: ${error}</div>`);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('❌ Authentication test failed:', error);
+                setStatus('auth-status', `<div class="status error">❌ Error: ${error.message}</div>`);
+            }
+        }
+        
+        async function manualTokenExchange() {
+            console.log('🔄 Manual token exchange...');
+            
+            if (!window.teamsToken) {
+                setStatus('auth-status', '<div class="status warning">⚠️ No Teams token available. Run "Test Authentication" first.</div>');
+                return;
+            }
+            
+            try {
+                console.log('🔄 Sending token to /auth/token-exchange...');
+                
+                const response = await fetch('/auth/token-exchange', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Teams-Token': window.teamsToken
+                    },
+                    body: JSON.stringify({
+                        token: window.teamsToken
+                    })
+                });
+                
+                console.log('🔍 Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Token exchange successful:', data);
+                    
+                    setStatus('auth-status', `
+                        <div class="status success">✅ Token exchange successful</div>
+                        <div class="status info">User: ${data.user?.displayName || 'Unknown'}</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `);
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Failed to parse error' }));
+                    console.error('❌ Token exchange failed:', errorData);
+                    
+                    setStatus('auth-status', `
+                        <div class="status error">❌ Token exchange failed (${response.status})</div>
+                        <pre>${JSON.stringify(errorData, null, 2)}</pre>
+                    `);
+                }
+                
+            } catch (error) {
+                console.error('❌ Token exchange error:', error);
+                setStatus('auth-status', `<div class="status error">❌ Error: ${error.message}</div>`);
+            }
+        }
+        
+        // Auto-check environment on load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Teams SSO Debug Tool loaded');
+            checkEnvironment();
+        });
+    </script>
+</body>
+</html>
