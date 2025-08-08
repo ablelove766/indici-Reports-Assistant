@@ -16,6 +16,8 @@
     <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
     <!-- Teams Authentication Module -->
     <script src="{{ url_for('static', filename='js/teams-auth.js') }}"></script>
+    <!-- Teams SSO Fix Script -->
+    <script src="{{ url_for('static', filename='js/teams-sso-fix.js') }}"></script>
     <style>
         /* Teams-specific styles */
         body.teams-mode {
@@ -326,8 +328,14 @@
                             <button id="test-sso-btn" onclick="testTeamsSSO()" style="background: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
                                 Test Teams SSO
                             </button>
-                            <button id="check-status-btn" onclick="checkSSOStatus()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                            <button id="check-status-btn" onclick="checkSSOStatus()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
                                 Check Status
+                            </button>
+                            <button id="force-sso-btn" onclick="window.forceSSOTest && window.forceSSOTest()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                                Force SSO
+                            </button>
+                            <button id="debug-info-btn" onclick="console.log('SSO Debug Info:', window.getSSODebug && window.getSSODebug())" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                                Debug Info
                             </button>
                         </div>
                     </div>

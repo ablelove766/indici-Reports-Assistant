@@ -176,6 +176,27 @@ def teams_sso_test():
     """Microsoft Teams SSO step-by-step test page."""
     return render_template('teams_sso_test.html')
 
+@app.route('/teams/force-sso')
+def teams_force_sso():
+    """Force Teams SSO with aggressive initialization."""
+    print("[RENDER] Force SSO page accessed", flush=True)
+    logger.info("[TEAMS] Force SSO page accessed")
+    return render_template('index.html', teams_mode=True, force_sso=True)
+
+@app.route('/teams/simple-test')
+def teams_simple_test():
+    """Simple Teams SSO test page."""
+    print("[RENDER] Simple SSO test page accessed", flush=True)
+    logger.info("[TEAMS] Simple SSO test page accessed")
+    return render_template('teams_simple_test.html')
+
+@app.route('/teams/working-test')
+def teams_working_test():
+    """Working Teams SSO test page."""
+    print("[RENDER] Working SSO test page accessed", flush=True)
+    logger.info("[TEAMS] Working SSO test page accessed")
+    return render_template('sso_working_test.html')
+
 @app.route('/test-logs')
 def test_logs():
     """Test route to verify logging works on Render.com."""

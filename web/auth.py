@@ -169,13 +169,17 @@ class TeamsAuthManager:
             for discovery_url in discovery_urls:
                 try:
                     logger.info(f"Trying discovery URL: {discovery_url}")
+                    print(f"[RENDER-AUTH] Trying discovery URL: {discovery_url}", flush=True)
                     discovery_response = requests.get(discovery_url, timeout=10)
+                    print(f"[RENDER-AUTH] Discovery response status: {discovery_response.status_code}", flush=True)
                     discovery_response.raise_for_status()
                     discovery_data = discovery_response.json()
                     logger.info(f"Successfully retrieved discovery data from: {discovery_url}")
+                    print(f"[RENDER-AUTH] Successfully retrieved discovery data from: {discovery_url}", flush=True)
                     break
                 except requests.exceptions.RequestException as e:
                     logger.warning(f"Failed to get discovery data from {discovery_url}: {e}")
+                    print(f"[RENDER-AUTH] Failed to get discovery data from {discovery_url}: {e}", flush=True)
                     continue
 
             if not discovery_data:
@@ -186,7 +190,9 @@ class TeamsAuthManager:
                 raise ValueError("JWKS URI not found in discovery document")
 
             logger.info(f"Fetching JWKS from: {jwks_uri}")
+            print(f"[RENDER-AUTH] Fetching JWKS from: {jwks_uri}", flush=True)
             jwks_response = requests.get(jwks_uri, timeout=10)
+            print(f"[RENDER-AUTH] JWKS response status: {jwks_response.status_code}", flush=True)
             jwks_response.raise_for_status()
             jwks_data = jwks_response.json()
 
@@ -208,6 +214,9 @@ class TeamsAuthManager:
             # First, try to decode without verification to get basic info
             unverified_payload = jwt.decode(token, options={"verify_signature": False})
             logger.info(f"Token received for user: {unverified_payload.get('preferred_username', 'Unknown')}")
+            print(f"[RENDER-AUTH] Token received for user: {unverified_payload.get('preferred_username', 'Unknown')}", flush=True)
+            print(f"[RENDER-AUTH] Token audience: {unverified_payload.get('aud', 'Unknown')}", flush=True)
+            print(f"[RENDER-AUTH] Token issuer: {unverified_payload.get('iss', 'Unknown')}", flush=True)
 
             # Decode token header to get key ID
             unverified_header = jwt.get_unverified_header(token)
@@ -215,8 +224,10 @@ class TeamsAuthManager:
 
             if not kid:
                 logger.warning("No key ID found in token header, skipping signature verification")
+                print("[RENDER-AUTH] No key ID found, returning unverified payload", flush=True)
                 # For development/testing, return unverified payload
                 # In production, you should always verify signatures
+                print("[RENDER-AUTH] Token validation bypassed for development", flush=True)
                 return unverified_payload
 
             # Get public keys
@@ -229,6 +240,7 @@ class TeamsAuthManager:
             # Check if we have any keys
             if not jwks_data.get("keys"):
                 logger.warning("No JWT public keys available, returning unverified token")
+                print("[RENDER-AUTH] No JWT public keys available, returning unverified token", flush=True)
                 return unverified_payload
 
             # Find the correct key
@@ -244,6 +256,7 @@ class TeamsAuthManager:
 
             if not public_key:
                 logger.warning(f"Public key not found for kid: {kid}, returning unverified token")
+                print(f"[RENDER-AUTH] Public key not found for kid: {kid}, returning unverified token", flush=True)
                 return unverified_payload
 
             # Try to validate token with multiple possible issuers
@@ -311,15 +324,15 @@ class TeamsAuthManager:
                 sso_logger.info(f"   Token expiry: {payload.get('exp', 'Unknown')}")
 
                 # Check if token is for the correct audience
-                expected_audience = f"api://indici-reports-assistant.onrender.com/{self.client_id}"
+                expected_audience = f"api://{self.client_id}"
                 actual_audience = payload.get('aud')
                 if actual_audience != expected_audience:
-                    sso_logger.warning(f"⚠️ Audience mismatch!")
+                    sso_logger.warning(f"[WARNING] Audience mismatch!")
                     sso_logger.warning(f"   Expected: {expected_audience}")
                     sso_logger.warning(f"   Actual: {actual_audience}")
                     sso_logger.warning(f"   Teams scope: {self.teams_scope}")
                 else:
-                    sso_logger.info(f"✅ Audience matches expected value")
+                    sso_logger.info(f"[SUCCESS] Audience matches expected value")
 
             except Exception as token_decode_error:
                 sso_logger.error(f"❌ Failed to decode Teams token: {token_decode_error}")
