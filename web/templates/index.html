@@ -313,6 +313,25 @@
                 <div class="header-info">
                     <h2><i class="fas fa-robot"></i> indici Reports Assistant</h2>
                     <p>Your intelligent assistant for indici Reports</p>
+                    {% if teams_mode %}
+                    <div class="teams-sso-controls" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                        <div style="margin-bottom: 10px;">
+                            <strong>Teams SSO Status:</strong>
+                            <span id="sso-status" style="font-size: 12px; margin-left: 10px;">Checking...</span>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <span id="user-info" style="font-size: 12px; color: #333;"></span>
+                        </div>
+                        <div>
+                            <button id="test-sso-btn" onclick="testTeamsSSO()" style="background: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                                Test Teams SSO
+                            </button>
+                            <button id="check-status-btn" onclick="checkSSOStatus()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                                Check Status
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="header-actions">
                     <button class="header-btn" onclick="clearChat()" title="Clear Chat">
@@ -1769,6 +1788,22 @@
                     if (context.app && context.app.theme) {
                         document.body.setAttribute('data-teams-theme', context.app.theme);
                     }
+
+                    // Automatically check status and trigger SSO after Teams context is loaded
+                    console.log('[TEAMS-AUTO] Teams context loaded, checking SSO status...');
+                    setTimeout(() => {
+                        checkSSOStatus();
+
+                        // Auto-trigger SSO if not authenticated
+                        if (window.teamsAuth && !window.teamsAuth.isAuthenticated()) {
+                            console.log('[TEAMS-AUTO] Not authenticated, triggering SSO...');
+                            window.teamsAuth.debugAuth();
+
+                            // Check again after SSO attempt
+                            setTimeout(checkSSOStatus, 3000);
+                        }
+                    }, 2000);
+
                 }).catch((error) => {
                     console.error('Failed to get Teams context:', error);
                 });
@@ -1779,8 +1814,148 @@
             console.warn('Teams SDK not available - running in standalone mode');
         }
 
+        // Check SSO status function
+        function checkSSOStatus() {
+            const statusEl = document.getElementById('sso-status');
+            const userInfoEl = document.getElementById('user-info');
+
+            console.log('[TEAMS-STATUS] Checking SSO status...');
+
+            if (window.teamsAuth) {
+                const status = window.teamsAuth.getAuthStatus();
+                console.log('[TEAMS-STATUS] Auth status:', status);
+
+                if (status.isAuthenticated) {
+                    statusEl.textContent = 'Authenticated ✓';
+                    statusEl.style.color = 'green';
+                    userInfoEl.textContent = `User: ${status.user?.displayName || 'Unknown'}`;
+                } else {
+                    statusEl.textContent = 'Not Authenticated ✗';
+                    statusEl.style.color = 'red';
+                    userInfoEl.textContent = `Initialized: ${status.isInitialized}, Has Token: ${status.hasToken}`;
+                }
+            } else {
+                statusEl.textContent = 'Teams Auth Not Available ✗';
+                statusEl.style.color = 'red';
+                userInfoEl.textContent = 'Teams SDK or Auth Manager not loaded';
+            }
+        }
+
+        // Teams SSO test function
+        function testTeamsSSO() {
+            const statusEl = document.getElementById('sso-status');
+            const btnEl = document.getElementById('test-sso-btn');
+            const userInfoEl = document.getElementById('user-info');
+
+            statusEl.textContent = 'Testing SSO...';
+            statusEl.style.color = 'orange';
+            userInfoEl.textContent = 'Attempting authentication...';
+            btnEl.disabled = true;
+
+            console.log('[TEAMS-TEST] Starting manual SSO test...');
+
+            // Check if Teams Auth is available
+            if (!window.teamsAuth) {
+                console.error('[TEAMS-TEST] Teams Auth not available');
+                statusEl.textContent = 'Teams Auth Not Available ✗';
+                statusEl.style.color = 'red';
+                userInfoEl.textContent = 'Teams Auth Manager not loaded';
+                btnEl.disabled = false;
+                return;
+            }
+
+            // Check if Teams SDK is available
+            if (typeof microsoftTeams === 'undefined') {
+                console.error('[TEAMS-TEST] Teams SDK not available');
+                statusEl.textContent = 'Teams SDK Not Available ✗';
+                statusEl.style.color = 'red';
+                userInfoEl.textContent = 'Microsoft Teams SDK not loaded';
+                btnEl.disabled = false;
+                return;
+            }
+
+            console.log('[TEAMS-TEST] Triggering manual SSO test...');
+            window.teamsAuth.debugAuth();
+
+            // Check status after delay
+            setTimeout(() => {
+                checkSSOStatus();
+                btnEl.disabled = false;
+            }, 5000);
+        }
+
+        // Check SSO status function
+        function checkSSOStatus() {
+            const statusEl = document.getElementById('sso-status');
+            const userInfoEl = document.getElementById('user-info');
+
+            console.log('[TEAMS-STATUS] Checking SSO status...');
+
+            if (window.teamsAuth) {
+                const status = window.teamsAuth.getAuthStatus();
+                console.log('[TEAMS-STATUS] Auth status:', status);
+
+                if (status.isAuthenticated) {
+                    statusEl.textContent = 'Authenticated ✓';
+                    statusEl.style.color = 'green';
+                    userInfoEl.textContent = `User: ${status.user?.displayName || status.user?.mail || status.user?.userPrincipalName || 'Unknown'}`;
+                    userInfoEl.style.color = 'green';
+                } else {
+                    statusEl.textContent = 'Not Authenticated ✗';
+                    statusEl.style.color = 'red';
+                    userInfoEl.textContent = `Initialized: ${status.isInitialized}, Has Token: ${status.hasToken}, Teams Context: ${!!status.teamsContext}`;
+                    userInfoEl.style.color = 'red';
+                }
+            } else {
+                statusEl.textContent = 'Teams Auth Not Available ✗';
+                statusEl.style.color = 'red';
+                userInfoEl.textContent = 'Teams SDK or Auth Manager not loaded';
+                userInfoEl.style.color = 'red';
+
+                // Try to initialize Teams Auth
+                console.log('[TEAMS-STATUS] Attempting to initialize Teams Auth...');
+                if (typeof initializeTeamsAuth === 'function') {
+                    initializeTeamsAuth();
+                    setTimeout(checkSSOStatus, 2000);
+                }
+            }
+        }
+
         // Teams-specific event handlers
         document.addEventListener('DOMContentLoaded', function() {
+            // Initial status check for Teams mode
+            if (document.body.classList.contains('teams-mode')) {
+                console.log('[TEAMS-DOM] Teams mode detected, starting status checks...');
+
+                // Check status periodically until Teams Auth is ready
+                let statusCheckInterval = setInterval(() => {
+                    if (window.teamsAuth) {
+                        console.log('[TEAMS-DOM] Teams Auth ready, checking status...');
+                        checkSSOStatus();
+                        clearInterval(statusCheckInterval);
+                    } else {
+                        console.log('[TEAMS-DOM] Waiting for Teams Auth...');
+                        const statusEl = document.getElementById('sso-status');
+                        if (statusEl) {
+                            statusEl.textContent = 'Loading Teams Auth...';
+                            statusEl.style.color = 'orange';
+                        }
+                    }
+                }, 1000);
+
+                // Stop checking after 30 seconds
+                setTimeout(() => {
+                    clearInterval(statusCheckInterval);
+                    if (!window.teamsAuth) {
+                        const statusEl = document.getElementById('sso-status');
+                        if (statusEl) {
+                            statusEl.textContent = 'Teams Auth Failed to Load ✗';
+                            statusEl.style.color = 'red';
+                        }
+                    }
+                }, 30000);
+            }
+
             // Adjust layout for Teams
             const appContainer = document.querySelector('.app-container');
             if (appContainer && appContainer.dataset.teamsMode === 'true') {

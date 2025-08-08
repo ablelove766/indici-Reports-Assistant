@@ -143,6 +143,13 @@ def index():
 @app.route('/teams')
 def teams_tab():
     """Microsoft Teams tab interface."""
+    # Log Teams access for debugging
+    print("[RENDER] Teams tab accessed", flush=True)
+    logger.info("[TEAMS] Teams tab accessed")
+    logger.info(f"[TEAMS] User-Agent: {request.headers.get('User-Agent', 'Unknown')}")
+    logger.info(f"[TEAMS] Request URL: {request.url}")
+    logger.info(f"[TEAMS] Request args: {dict(request.args)}")
+
     # Get configuration parameters
     view_mode = request.args.get('view', 'full')
     responsive_mode = request.args.get('responsive', 'auto')
@@ -163,6 +170,11 @@ def teams_config():
 def teams_debug():
     """Microsoft Teams SSO debug page."""
     return render_template('teams_debug.html')
+
+@app.route('/teams/sso-test')
+def teams_sso_test():
+    """Microsoft Teams SSO step-by-step test page."""
+    return render_template('teams_sso_test.html')
 
 @app.route('/test-logs')
 def test_logs():

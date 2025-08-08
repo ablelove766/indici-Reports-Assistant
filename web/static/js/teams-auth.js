@@ -26,15 +26,16 @@ class TeamsAuthManager {
 
             // Check if Teams SDK is available
             if (typeof microsoftTeams === 'undefined') {
-                console.warn('⚠️ [TeamsAuth] Teams SDK not available, running in standalone mode');
+                console.warn('[TeamsAuth] Teams SDK not available, running in standalone mode');
                 this.isInitialized = true;
                 return;
             }
 
-            console.log('✅ [TeamsAuth] Teams SDK found, version:', microsoftTeams.version || 'unknown');
+            console.log('[TeamsAuth] Teams SDK found, version:', microsoftTeams.version || 'unknown');
+            console.log('[TeamsAuth] Teams SDK methods available:', Object.keys(microsoftTeams));
 
             // Wait a bit to ensure Teams SDK is fully loaded
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
             // Check if already initialized by the main template
             if (window.teamsContext) {
@@ -287,6 +288,19 @@ class TeamsAuthManager {
     isAuthenticated() {
         return this.currentUser !== null;
     }
+
+    /**
+     * Get authentication status with details
+     */
+    getAuthStatus() {
+        return {
+            isAuthenticated: this.isAuthenticated(),
+            user: this.currentUser,
+            hasToken: !!this.accessToken,
+            isInitialized: this.isInitialized,
+            teamsContext: this.teamsContext
+        };
+    }
     
     /**
      * Get access token
@@ -332,25 +346,81 @@ class TeamsAuthManager {
      * Debug function to manually trigger authentication
      */
     async debugAuth() {
-        console.log('🧪 [TeamsAuth] Manual authentication debug triggered');
-        console.log('🔍 [TeamsAuth] Current state:');
+        console.log('[TeamsAuth] Manual authentication debug triggered');
+        console.log('[TeamsAuth] Current state:');
         console.log('   - Initialized:', this.isInitialized);
         console.log('   - Teams SDK available:', typeof microsoftTeams !== 'undefined');
         console.log('   - Teams context:', this.teamsContext);
         console.log('   - Current user:', this.currentUser);
         console.log('   - Access token:', !!this.accessToken);
+        console.log('   - Window location:', window.location.href);
+        console.log('   - User agent:', navigator.userAgent);
 
+        // Check Teams SDK methods
         if (typeof microsoftTeams !== 'undefined') {
-            console.log('🔄 [TeamsAuth] Attempting manual authentication...');
+            console.log('[TeamsAuth] Teams SDK methods:', Object.keys(microsoftTeams));
+            if (microsoftTeams.authentication) {
+                console.log('[TeamsAuth] Authentication methods:', Object.keys(microsoftTeams.authentication));
+            }
+
+            console.log('[TeamsAuth] Attempting manual authentication...');
             await this.performSilentAuth();
         } else {
-            console.log('❌ [TeamsAuth] Teams SDK not available for manual auth');
+            console.log('[TeamsAuth] Teams SDK not available for manual auth');
+
+            // Try to load Teams SDK if not available
+            console.log('[TeamsAuth] Attempting to load Teams SDK...');
+            const script = document.createElement('script');
+            script.src = 'https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js';
+            script.onload = () => {
+                console.log('[TeamsAuth] Teams SDK loaded, retrying auth...');
+                setTimeout(() => this.initializeTeamsSDK(), 1000);
+            };
+            script.onerror = () => {
+                console.error('[TeamsAuth] Failed to load Teams SDK');
+            };
+            document.head.appendChild(script);
         }
     }
 }
 
-// Global Teams authentication manager
-window.teamsAuth = new TeamsAuthManager();
+// Initialize Teams authentication manager when DOM is ready
+function initializeTeamsAuth() {
+    console.log('[TEAMS-INIT] Initializing Teams authentication...');
+
+    // Check if already initialized
+    if (window.teamsAuth) {
+        console.log('[TEAMS-INIT] Teams auth already initialized');
+        return window.teamsAuth;
+    }
+
+    try {
+        window.teamsAuth = new TeamsAuthManager();
+        console.log('[TEAMS-INIT] Teams auth manager created successfully');
+        return window.teamsAuth;
+    } catch (error) {
+        console.error('[TEAMS-INIT] Failed to create Teams auth manager:', error);
+        return null;
+    }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTeamsAuth);
+} else {
+    // DOM already loaded
+    initializeTeamsAuth();
+}
+
+// Also initialize when Teams SDK is ready
+if (typeof microsoftTeams !== 'undefined') {
+    initializeTeamsAuth();
+} else {
+    // Wait for Teams SDK to load
+    window.addEventListener('load', () => {
+        setTimeout(initializeTeamsAuth, 1000);
+    });
+}
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
