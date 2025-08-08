@@ -14,6 +14,8 @@
     {% if teams_mode %}
     <!-- Microsoft Teams SDK -->
     <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+    <!-- Teams Authentication Module -->
+    <script src="{{ url_for('static', filename='js/teams-auth.js') }}"></script>
     <style>
         /* Teams-specific styles */
         body.teams-mode {
@@ -415,12 +417,25 @@
 
         window.sendSampleQuery = window.sendSampleQuery || function(query) {
             console.log('🚨 EMERGENCY: sendSampleQuery called with:', query);
-            const messageInput = document.getElementById('message-input');
-            if (messageInput) {
-                messageInput.value = query;
-                if (window.sendMessage) {
-                    window.sendMessage();
+            try {
+                if (!query || typeof query !== 'string') {
+                    console.error('Invalid query provided to sendSampleQuery:', query);
+                    return;
                 }
+
+                const messageInput = document.getElementById('message-input');
+                if (messageInput) {
+                    messageInput.value = query;
+                    if (window.sendMessage && typeof window.sendMessage === 'function') {
+                        window.sendMessage();
+                    } else {
+                        console.error('sendMessage function not available');
+                    }
+                } else {
+                    console.error('Message input element not found');
+                }
+            } catch (error) {
+                console.error('Error in sendSampleQuery:', error);
             }
         };
 
@@ -1540,17 +1555,34 @@
         function sendSampleQuery(query) {
             console.log('📱 sendSampleQuery called:', query);
 
-            // Close mobile nav if open
-            if (window.innerWidth <= 768) {
-                console.log('📱 Closing mobile nav before sending query');
-                closeMobileNav();
-            }
+            try {
+                if (!query || typeof query !== 'string') {
+                    console.error('Invalid query provided to sendSampleQuery:', query);
+                    return;
+                }
 
-            // Set the input value and send the message
-            const messageInput = document.getElementById('message-input');
-            if (messageInput) {
-                messageInput.value = query;
-                sendMessage();
+                // Close mobile nav if open
+                if (window.innerWidth <= 768) {
+                    console.log('📱 Closing mobile nav before sending query');
+                    if (typeof closeMobileNav === 'function') {
+                        closeMobileNav();
+                    }
+                }
+
+                // Set the input value and send the message
+                const messageInput = document.getElementById('message-input');
+                if (messageInput) {
+                    messageInput.value = query;
+                    if (typeof sendMessage === 'function') {
+                        sendMessage();
+                    } else {
+                        console.error('sendMessage function not available');
+                    }
+                } else {
+                    console.error('Message input element not found');
+                }
+            } catch (error) {
+                console.error('Error in sendSampleQuery:', error);
             }
         }
 

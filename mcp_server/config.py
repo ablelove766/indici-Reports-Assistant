@@ -181,8 +181,38 @@ class Config:
         env_val = os.getenv("RESPONSE_ENHANCEMENT_TEMPERATURE")
         return float(env_val) if env_val else self._config.get("llm_features", {}).get("response_enhancement_temperature", 0.3)
 
+    # Azure AD / Teams SSO Configuration
+    @property
+    def azure_client_id(self) -> str:
+        """Get Azure AD client ID from environment or config."""
+        return os.getenv("AZURE_CLIENT_ID") or self._config.get("azure_ad", {}).get("client_id", "")
 
-    
+    @property
+    def azure_client_secret(self) -> str:
+        """Get Azure AD client secret from environment or config."""
+        return os.getenv("AZURE_CLIENT_SECRET") or self._config.get("azure_ad", {}).get("client_secret", "")
+
+    @property
+    def azure_tenant_id(self) -> str:
+        """Get Azure AD tenant ID from environment or config."""
+        return os.getenv("AZURE_TENANT_ID") or self._config.get("azure_ad", {}).get("tenant_id", "")
+
+    @property
+    def azure_authority(self) -> str:
+        """Get Azure AD authority URL from environment or config."""
+        return os.getenv("AZURE_AUTHORITY") or self._config.get("azure_ad", {}).get("authority", f"https://login.microsoftonline.com/{self.azure_tenant_id}")
+
+    @property
+    def azure_scope(self) -> str:
+        """Get Azure AD scope from environment or config."""
+        return os.getenv("AZURE_SCOPE") or self._config.get("azure_ad", {}).get("scope", "https://graph.microsoft.com/.default")
+
+    @property
+    def teams_app_id(self) -> str:
+        """Get Teams app ID from environment or config."""
+        return os.getenv("TEAMS_APP_ID") or self._config.get("teams", {}).get("app_id", self.azure_client_id)
+
+
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value by key."""
         keys = key.split('.')

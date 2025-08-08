@@ -846,7 +846,11 @@ class IndiciChatApp {
         this.statusDot = null;
         this.statusText = null;
         this.charCount = null;
-        
+
+        // Teams SSO user context
+        this.userContext = null;
+        this.isAuthenticated = false;
+
         this.init();
     }
     
@@ -952,6 +956,39 @@ class IndiciChatApp {
         this.statusDot.className = `status-dot ${status}`;
         this.statusText.textContent = text;
     }
+
+    /**
+     * Set user context from Teams authentication
+     */
+    setUserContext(user) {
+        console.log('🔐 Setting user context:', user);
+        this.userContext = user;
+        this.isAuthenticated = true;
+
+        // Update socket connection with user context
+        if (this.socket && this.isConnected) {
+            this.socket.emit('user_authenticated', {
+                user: user,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    /**
+     * Get authentication headers for API requests
+     */
+    getAuthHeaders() {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Add Teams token if available
+        if (window.teamsAuth && window.teamsAuth.getAccessToken()) {
+            headers['X-Teams-Token'] = window.teamsAuth.getAccessToken();
+        }
+
+        return headers;
+    }
     
     sendMessage() {
         console.log('🟢 ChatApp.sendMessage() called');
@@ -993,11 +1030,17 @@ class IndiciChatApp {
         console.log('📤 Adding user message to chat');
         this.addMessage(message, 'user', 'chat');
 
-        // Send to server
+        // Send to server with user context
         console.log('🚀 Sending message to server:', message);
         try {
-            this.socket.emit('user_message', { message: message });
-            console.log('✅ Message emitted successfully');
+            const messageData = {
+                message: message,
+                userContext: this.userContext,
+                isAuthenticated: this.isAuthenticated
+            };
+
+            this.socket.emit('user_message', messageData);
+            console.log('✅ Message emitted successfully with user context');
         } catch (error) {
             console.error('❌ Error emitting message:', error);
             this.addMessage('❌ Error sending message. Please try again.', 'assistant', 'error');
@@ -1122,7 +1165,15 @@ class IndiciChatApp {
             const data = await response.json();
             
             if (data.success && data.samples) {
-                this.displaySampleQueries(data.samples);
+                // Handle both string and array formats
+                if (typeof data.samples === 'string') {
+                    this.displaySampleQueries(data.samples);
+                } else if (Array.isArray(data.samples)) {
+                    this.displaySampleQueriesFromArray(data.samples);
+                } else {
+                    console.error('Unexpected samples format:', typeof data.samples);
+                    this.displaySampleQueriesError();
+                }
             } else {
                 this.displaySampleQueriesError();
             }
@@ -1134,6 +1185,17 @@ class IndiciChatApp {
     
     displaySampleQueries(samplesText) {
         const container = document.getElementById('sample-queries');
+
+        if (!container) {
+            console.error('Sample queries container not found');
+            return;
+        }
+
+        if (!samplesText || typeof samplesText !== 'string') {
+            console.error('Invalid samples text provided:', samplesText);
+            this.displaySampleQueriesError();
+            return;
+        }
 
         // Parse the samples text to extract individual queries
         const lines = samplesText.split('\n');
@@ -1230,9 +1292,94 @@ class IndiciChatApp {
         return categories;
     }
     
+    displaySampleQueriesFromArray(samplesArray) {
+        const container = document.getElementById('sample-queries');
+
+        if (!container) {
+            console.error('Sample queries container not found');
+            return;
+        }
+
+        if (!Array.isArray(samplesArray)) {
+            console.error('Invalid samples array provided:', samplesArray);
+            this.displaySampleQueriesError();
+            return;
+        }
+
+        // Group queries by category
+        const categories = this.categorizeQueriesFromArray(samplesArray);
+
+        // Create HTML for categorized queries
+        container.innerHTML = '';
+
+        Object.keys(categories).forEach(categoryName => {
+            const categoryQueries = categories[categoryName];
+            const categoryId = categoryName.toLowerCase().replace(/\s+/g, '-');
+
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'query-category';
+
+            categoryDiv.innerHTML = `
+                <div class="category-header" onclick="toggleCategory('${categoryId}')">
+                    <div class="category-title">
+                        <i class="fas fa-chevron-right category-icon" id="icon-${categoryId}"></i>
+                        ${categoryName}
+                    </div>
+                    <div class="category-count">${categoryQueries.length}</div>
+                </div>
+                <div class="category-content" id="content-${categoryId}">
+                    ${categoryQueries.map(query => `
+                        <div class="sample-query" onclick="sendSampleQuery('${(query.query || '').replace(/'/g, "\\'")}')">
+                            <div class="sample-query-title">${query.title || ''}</div>
+                            <div class="sample-query-desc">${query.description || ''}</div>
+                            <div class="sample-query-text">"${query.query || ''}"</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.appendChild(categoryDiv);
+        });
+    }
+
+    categorizeQueriesFromArray(queries) {
+        const categories = {
+            'Provider Capitation Queries': [],
+            'Health Check Queries': [],
+            'Other Queries': []
+        };
+
+        queries.forEach(query => {
+            const title = (query.title || '').toLowerCase();
+            const description = (query.description || '').toLowerCase();
+            const queryText = (query.query || '').toLowerCase();
+
+            if (title.includes('capitation') || title.includes('provider') || title.includes('report') ||
+                description.includes('capitation') || queryText.includes('capitation')) {
+                categories['Provider Capitation Queries'].push(query);
+            } else if (title.includes('health') || title.includes('check') || title.includes('status') ||
+                       description.includes('health') || queryText.includes('health')) {
+                categories['Health Check Queries'].push(query);
+            } else {
+                categories['Other Queries'].push(query);
+            }
+        });
+
+        // Remove empty categories
+        Object.keys(categories).forEach(key => {
+            if (categories[key].length === 0) {
+                delete categories[key];
+            }
+        });
+
+        return categories;
+    }
+
     displaySampleQueriesError() {
         const container = document.getElementById('sample-queries');
-        container.innerHTML = '<div class="loading">Failed to load samples</div>';
+        if (container) {
+            container.innerHTML = '<div class="loading">Failed to load samples</div>';
+        }
     }
     
     sendSampleQuery(query) {
@@ -1264,6 +1411,17 @@ class IndiciChatApp {
     displaySidebarItems(data) {
         const container = document.getElementById('sidebar-sections');
 
+        if (!container) {
+            console.error('Sidebar sections container not found');
+            return;
+        }
+
+        if (!data || !data.sections || !Array.isArray(data.sections)) {
+            console.error('Invalid sidebar data provided:', data);
+            this.displaySidebarError();
+            return;
+        }
+
         if (container && data.sections) {
             container.innerHTML = data.sections.map(section => {
                 // Determine toggle icon based on style
@@ -1277,21 +1435,21 @@ class IndiciChatApp {
                 }
 
                 return `
-                    <div class="collapsible-section ${section.toggle_style === 'checkmark' ? 'checkmark-style' : ''}">
+                    <div class="collapsible-section ${(section.toggle_style || '') === 'checkmark' ? 'checkmark-style' : ''}">
                         <div class="section-header ${section.collapsible ? 'clickable' : ''}"
-                             ${section.collapsible ? `onclick="toggleSection('${section.id}')"` : ''}>
+                             ${section.collapsible ? `onclick="toggleSection('${section.id || ''}')"` : ''}>
                             <div class="header-left">
-                                <span class="section-icon">${section.icon}</span>
-                                <span class="section-title">${section.title}</span>
+                                <span class="section-icon">${section.icon || ''}</span>
+                                <span class="section-title">${section.title || ''}</span>
                             </div>
-                            ${section.collapsible ? `<span class="toggle-icon ${section.toggle_style === 'checkmark' ? 'checkmark' : 'arrow'}">${toggleIcon}</span>` : ''}
+                            ${section.collapsible ? `<span class="toggle-icon ${(section.toggle_style || '') === 'checkmark' ? 'checkmark' : 'arrow'}">${toggleIcon}</span>` : ''}
                         </div>
                         <div class="section-content ${section.expanded ? 'expanded' : 'collapsed'}"
-                             id="section-${section.id}">
-                            ${section.items.map(item => `
-                                <button class="action-btn" onclick="sendSampleQuery('${item.query.replace(/'/g, "\\'")}')">
-                                    <span class="icon">${item.icon}</span>
-                                    ${item.label}
+                             id="section-${section.id || ''}">
+                            ${(section.items || []).map(item => `
+                                <button class="action-btn" onclick="sendSampleQuery('${(item.query || '').replace(/'/g, "\\'")}')">
+                                    <span class="icon">${item.icon || ''}</span>
+                                    ${item.label || ''}
                                 </button>
                             `).join('')}
                         </div>
@@ -1353,9 +1511,29 @@ function clearChat() {
 }
 
 function toggleSection(sectionId) {
+    if (!sectionId) {
+        console.error('toggleSection: sectionId is required');
+        return;
+    }
+
     const content = document.getElementById(`section-${sectionId}`);
+    if (!content) {
+        console.error(`toggleSection: content element not found for section ${sectionId}`);
+        return;
+    }
+
     const header = content.previousElementSibling;
+    if (!header) {
+        console.error(`toggleSection: header element not found for section ${sectionId}`);
+        return;
+    }
+
     const toggleIcon = header.querySelector('.toggle-icon');
+    if (!toggleIcon) {
+        console.error(`toggleSection: toggle icon not found for section ${sectionId}`);
+        return;
+    }
+
     const isCheckmarkStyle = toggleIcon.classList.contains('checkmark');
 
     if (content.classList.contains('expanded')) {
@@ -1433,8 +1611,23 @@ function sendMessage() {
 }
 
 function toggleCategory(categoryId) {
+    if (!categoryId) {
+        console.error('toggleCategory: categoryId is required');
+        return;
+    }
+
     const content = document.getElementById(`content-${categoryId}`);
     const icon = document.getElementById(`icon-${categoryId}`);
+
+    if (!content) {
+        console.error(`toggleCategory: content element not found for category ${categoryId}`);
+        return;
+    }
+
+    if (!icon) {
+        console.error(`toggleCategory: icon element not found for category ${categoryId}`);
+        return;
+    }
 
     if (content.style.display === 'none' || content.style.display === '') {
         content.style.display = 'block';
@@ -1448,6 +1641,25 @@ function toggleCategory(categoryId) {
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.chatApp = new IndiciChatApp();
+
+    // Initialize Teams authentication if in Teams mode
+    if (document.body.classList.contains('teams-mode') && window.teamsAuth) {
+        console.log('🔐 Teams mode detected, setting up authentication...');
+
+        // Register authentication state change handler
+        window.teamsAuth.onAuthStateChange((user, error) => {
+            if (user) {
+                console.log('✅ User authenticated:', user.displayName);
+                // Update chat app with user context
+                if (window.chatApp) {
+                    window.chatApp.setUserContext(user);
+                }
+            } else if (error) {
+                console.warn('⚠️ Authentication failed:', error);
+                // Continue without authentication
+            }
+        });
+    }
 
     // Add some welcome styling
     setTimeout(() => {

@@ -1,5 +1,16 @@
 # Environment variables - NEVER commit these!
 .env
+.env.local
+.env.production
+.env.staging
+
+# API Keys and Secrets - NEVER commit these!
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
 
 # Python
 __pycache__/
@@ -24,24 +35,65 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual environment
+# Virtual environments
 venv/
+venv_*/
 env/
 ENV/
+.venv/
 
-# IDE
+# Flask session files
+flask_session/
+instance/
+
+# IDE and Editors
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Logs
+# Logs and databases
 *.log
+*.sqlite
+*.db
 
 # Temporary files
 *.tmp
 *.temp
+*.bak
+*.backup
+
+# Test files and documentation (development only)
+test_*.py
+*_test.html
+FIXES_*.md
+TEAMS_*.md
+*_VERIFICATION.md
+
+# Node modules (if any)
+node_modules/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json

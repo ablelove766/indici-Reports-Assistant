@@ -4,9 +4,15 @@ import asyncio
 import logging
 import json
 import traceback
-from flask import Flask, render_template, request, jsonify, make_response
+from flask import Flask, render_template, request, jsonify, make_response, session, g
 from flask_socketio import SocketIO, emit
 from datetime import datetime
+try:
+    from flask_session import Session
+    FLASK_SESSION_AVAILABLE = True
+except ImportError:
+    FLASK_SESSION_AVAILABLE = False
+    print("⚠️ Flask-Session not available, using default session management")
 import sys
 import os
 
@@ -16,6 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from mcp_server.config import config
 from chatbot.chat_handler import chat_handler
 from chatbot.mcp_client import mcp_client
+from web.auth import auth_manager, require_teams_auth, get_current_user, get_teams_token
 
 # Configure logging
 logging.basicConfig(
@@ -28,31 +35,48 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'indici-mcp-chatbot-secret-key'
 
+# Configure Flask-Session for Teams SSO (if available)
+if FLASK_SESSION_AVAILABLE:
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_PERMANENT'] = False
+    app.config['SESSION_USE_SIGNER'] = True
+    app.config['SESSION_KEY_PREFIX'] = 'indici_teams_'
+    Session(app)
+else:
+    # Use default Flask session management
+    app.config['SESSION_PERMANENT'] = False
+
 # Initialize SocketIO with Teams-compatible CORS
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=True, engineio_logger=True)
 
-# Store active sessions
+# Store active sessions with user context
 active_sessions = {}
+authenticated_users = {}  # Store authenticated user sessions
 
 # Teams-compatible CSP headers
 def add_teams_headers(response):
-    """Add headers required for Microsoft Teams integration."""
-    # Content Security Policy for Teams iframe embedding
+    """Add headers required for Microsoft Teams integration with SSO support."""
+    # Content Security Policy for Teams iframe embedding with SSO support
     csp_policy = (
         "default-src 'self' https://teams.microsoft.com https://*.teams.microsoft.com "
-        "https://teams.live.com https://*.teams.live.com https://indici-reports-assistant.onrender.com; "
+        "https://teams.live.com https://*.teams.live.com https://indici-reports-assistant.onrender.com "
+        "https://login.microsoftonline.com https://*.login.microsoftonline.com "
+        "https://graph.microsoft.com https://*.graph.microsoft.com; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net "
         "https://cdnjs.cloudflare.com https://teams.microsoft.com https://*.teams.microsoft.com "
-        "https://res.cdn.office.net; "
+        "https://res.cdn.office.net https://login.microsoftonline.com; "
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
         "https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
-        "img-src 'self' data: https:; "
+        "img-src 'self' data: https: https://graph.microsoft.com; "
         "connect-src 'self' wss: ws: https://teams.microsoft.com https://*.teams.microsoft.com "
-        "wss://indici-reports-assistant.onrender.com https://indici-reports-assistant.onrender.com; "
+        "wss://indici-reports-assistant.onrender.com https://indici-reports-assistant.onrender.com "
+        "https://login.microsoftonline.com https://*.login.microsoftonline.com "
+        "https://graph.microsoft.com https://*.graph.microsoft.com; "
         "frame-ancestors https://teams.microsoft.com https://*.teams.microsoft.com "
         "https://teams.live.com https://*.teams.live.com; "
-        "frame-src 'self' https://teams.microsoft.com https://*.teams.microsoft.com;"
+        "frame-src 'self' https://teams.microsoft.com https://*.teams.microsoft.com "
+        "https://login.microsoftonline.com;"
     )
 
     response.headers['Content-Security-Policy'] = csp_policy
@@ -118,6 +142,180 @@ def teams_privacy():
 def teams_terms():
     """Teams terms of use page."""
     return render_template('teams_terms.html')
+
+# ============================================================================
+# MICROSOFT TEAMS SSO AUTHENTICATION ROUTES
+# ============================================================================
+
+@app.route('/auth/login')
+def auth_login():
+    """Initiate Teams SSO login flow."""
+    try:
+        # Build authorization URL
+        auth_url = auth_manager.msal_app.get_authorization_request_url(
+            scopes=[config.azure_scope],
+            redirect_uri=config.get("azure_ad.redirect_uri", "https://indici-reports-assistant.onrender.com/auth/callback")
+        )
+
+        return jsonify({
+            "auth_url": auth_url,
+            "success": True
+        })
+
+    except Exception as e:
+        logger.error(f"Error initiating login: {e}")
+        return jsonify({
+            "error": "Failed to initiate login",
+            "success": False
+        }), 500
+
+@app.route('/auth/callback')
+def auth_callback():
+    """Handle Teams SSO callback."""
+    try:
+        # Get authorization code from query parameters
+        code = request.args.get('code')
+        if not code:
+            return jsonify({"error": "Authorization code not provided"}), 400
+
+        # Exchange code for token
+        result = auth_manager.msal_app.acquire_token_by_authorization_code(
+            code,
+            scopes=[config.azure_scope],
+            redirect_uri=config.get("azure_ad.redirect_uri", "https://indici-reports-assistant.onrender.com/auth/callback")
+        )
+
+        if "access_token" in result:
+            # Store token in session
+            session['access_token'] = result['access_token']
+            session['user_info'] = result.get('id_token_claims', {})
+
+            return jsonify({
+                "success": True,
+                "user": result.get('id_token_claims', {})
+            })
+        else:
+            logger.error(f"Token acquisition failed: {result.get('error_description', 'Unknown error')}")
+            return jsonify({
+                "error": "Failed to acquire token",
+                "success": False
+            }), 400
+
+    except Exception as e:
+        logger.error(f"Error in auth callback: {e}")
+        return jsonify({
+            "error": "Authentication callback failed",
+            "success": False
+        }), 500
+
+@app.route('/auth/token-exchange', methods=['POST'])
+def token_exchange():
+    """Exchange Teams token for application token (On-Behalf-Of flow)."""
+    try:
+        data = request.get_json()
+        teams_token = data.get('token')
+
+        if not teams_token:
+            return jsonify({"error": "Teams token required"}), 400
+
+        # Validate Teams token
+        user_payload = auth_manager.validate_teams_token(teams_token)
+        if not user_payload:
+            return jsonify({"error": "Invalid Teams token"}), 401
+
+        # Exchange for Graph token
+        graph_token = auth_manager.exchange_token_for_graph_token(teams_token)
+        if not graph_token:
+            return jsonify({"error": "Token exchange failed"}), 500
+
+        # Get user info from Graph
+        user_info = auth_manager.get_user_info_from_graph(graph_token)
+        if not user_info:
+            return jsonify({"error": "Failed to get user info"}), 500
+
+        # Store in session
+        session['access_token'] = graph_token
+        session['user_info'] = user_info
+        session['teams_token'] = teams_token
+
+        return jsonify({
+            "success": True,
+            "user": {
+                "id": user_info.get("id"),
+                "displayName": user_info.get("displayName"),
+                "userPrincipalName": user_info.get("userPrincipalName"),
+                "mail": user_info.get("mail")
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error in token exchange: {e}")
+        return jsonify({
+            "error": "Token exchange failed",
+            "success": False
+        }), 500
+
+@app.route('/auth/user')
+def get_user():
+    """Get current authenticated user information."""
+    try:
+        user_info = session.get('user_info')
+        if not user_info:
+            return jsonify({"error": "Not authenticated"}), 401
+
+        return jsonify({
+            "success": True,
+            "user": {
+                "id": user_info.get("id"),
+                "displayName": user_info.get("displayName"),
+                "userPrincipalName": user_info.get("userPrincipalName"),
+                "mail": user_info.get("mail")
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting user info: {e}")
+        return jsonify({
+            "error": "Failed to get user info",
+            "success": False
+        }), 500
+
+@app.route('/auth/logout', methods=['POST'])
+def auth_logout():
+    """Logout user and clear session."""
+    try:
+        session.clear()
+        return jsonify({
+            "success": True,
+            "message": "Logged out successfully"
+        })
+
+    except Exception as e:
+        logger.error(f"Error during logout: {e}")
+        return jsonify({
+            "error": "Logout failed",
+            "success": False
+        }), 500
+
+@app.route('/auth/status')
+def auth_status():
+    """Get current authentication status."""
+    try:
+        user_info = session.get('user_info')
+        access_token = session.get('access_token')
+
+        return jsonify({
+            "authenticated": bool(user_info and access_token),
+            "user": user_info if user_info else None,
+            "timestamp": datetime.now().isoformat()
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting auth status: {e}")
+        return jsonify({
+            "authenticated": False,
+            "error": str(e)
+        }), 500
 
 @app.route('/api/health')
 def health_check():
@@ -237,7 +435,9 @@ def handle_connect():
             "connected_at": datetime.now(),
             "message_count": 0,
             "user_agent": request.headers.get('User-Agent', 'Unknown'),
-            "remote_addr": request.remote_addr
+            "remote_addr": request.remote_addr,
+            "authenticated": False,
+            "user_context": None
         }
         active_sessions[session_id] = client_info
 
@@ -258,13 +458,60 @@ def handle_connect():
         import traceback
         traceback.print_exc()
 
+@socketio.on('user_authenticated')
+def handle_user_authenticated(data):
+    """Handle user authentication event from Teams SSO."""
+    try:
+        session_id = request.sid
+        user_data = data.get('user', {})
+
+        logger.info(f"🔐 User authenticated: {session_id} - {user_data.get('displayName', 'Unknown')}")
+
+        # Update session with user context
+        if session_id in active_sessions:
+            active_sessions[session_id]["authenticated"] = True
+            active_sessions[session_id]["user_context"] = user_data
+            active_sessions[session_id]["authenticated_at"] = datetime.now()
+
+        # Store in authenticated users
+        authenticated_users[session_id] = {
+            "user": user_data,
+            "authenticated_at": datetime.now(),
+            "session_id": session_id
+        }
+
+        # Send authentication confirmation
+        emit('auth_confirmed', {
+            "success": True,
+            "user": user_data,
+            "timestamp": datetime.now().isoformat()
+        })
+
+        logger.info(f"Authentication confirmed for {session_id}")
+
+    except Exception as e:
+        logger.error(f"❌ Error handling user authentication: {e}")
+        emit('auth_error', {
+            "error": "Authentication processing failed",
+            "timestamp": datetime.now().isoformat()
+        })
+
 @socketio.on('disconnect')
 def handle_disconnect():
     """Handle client disconnection."""
     session_id = request.sid
+
+    # Clean up active sessions
     if session_id in active_sessions:
+        user_context = active_sessions[session_id].get("user_context")
+        if user_context:
+            logger.info(f"👤 Authenticated user disconnected: {user_context.get('displayName', 'Unknown')}")
         del active_sessions[session_id]
-    
+
+    # Clean up authenticated users
+    if session_id in authenticated_users:
+        del authenticated_users[session_id]
+
     logger.info(f"Client disconnected: {session_id}")
 
 @socketio.on('user_message')
@@ -273,7 +520,9 @@ def handle_user_message(data):
     try:
         session_id = request.sid
         message = data.get('message', '').strip()
-        
+        user_context = data.get('userContext')
+        is_authenticated = data.get('isAuthenticated', False)
+
         if not message:
             emit('bot_message', {
                 "message": "❌ Please enter a message.",
@@ -281,12 +530,17 @@ def handle_user_message(data):
                 "type": "error"
             })
             return
-        
-        # Update session stats
+
+        # Update session stats and user context
         if session_id in active_sessions:
             active_sessions[session_id]["message_count"] += 1
-        
+            if user_context:
+                active_sessions[session_id]["user_context"] = user_context
+                active_sessions[session_id]["authenticated"] = is_authenticated
+
         logger.info(f"📨 Received message from {session_id}: '{message}'")
+        if user_context:
+            logger.info(f"👤 User: {user_context.get('displayName', 'Unknown')} ({user_context.get('userPrincipalName', 'Unknown')})")
         logger.info(f"Session info: {active_sessions.get(session_id, 'Unknown')}")
 
         # Show typing indicator

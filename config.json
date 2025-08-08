@@ -20,6 +20,22 @@
     "response_enhancement_temperature": 0.3
   },
 
+  "azure_ad": {
+    "client_id": "",
+    "client_secret": "",
+    "tenant_id": "",
+    "authority": "",
+    "scope": "https://graph.microsoft.com/.default",
+    "redirect_uri": "https://indici-reports-assistant.onrender.com/auth/callback"
+  },
+
+  "teams": {
+    "app_id": "",
+    "enable_sso": true,
+    "enable_silent_auth": true,
+    "token_exchange_uri": "https://indici-reports-assistant.onrender.com/auth/token-exchange"
+  },
+
   "indici_api": {
     "base_url": "http://localhost:5010",
     "endpoints": {

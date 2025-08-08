@@ -55,7 +55,22 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "indici-reports-assistant.onrender.com"
-  ]
- 
+    "indici-reports-assistant.onrender.com",
+    "login.microsoftonline.com",
+    "graph.microsoft.com"
+  ],
+  "webApplicationInfo": {
+    "id": "e2f9d05e-f417-47c8-9119-e8a7ecff07dd",
+    "resource": "api://indici-reports-assistant.onrender.com/e2f9d05e-f417-47c8-9119-e8a7ecff07dd"
+  },
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "User.Read",
+          "type": "Delegated"
+        }
+      ]
+    }
+  }
 }
