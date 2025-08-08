@@ -273,7 +273,11 @@ class TeamsAuthManager:
                         token,
                         public_key,
                         algorithms=["RS256"],
-                        audience=[self.client_id, f"api://{self.client_id}"],
+                        audience=[
+                            self.client_id,
+                            f"api://{self.client_id}",
+                            f"api://indici-reports-assistant.onrender.com/{self.client_id}"
+                        ],
                         issuer=issuer,
                         options={"verify_aud": False}  # More lenient audience verification
                     )

@@ -210,7 +210,7 @@ class Config:
     @property
     def azure_teams_scope(self) -> str:
         """Get Azure AD Teams scope from environment or config."""
-        return os.getenv("AZURE_TEAMS_SCOPE") or self._config.get("azure_ad", {}).get("teams_scope", f"api://{self.azure_client_id}/access_as_user")
+        return os.getenv("AZURE_TEAMS_SCOPE") or self._config.get("azure_ad", {}).get("teams_scope", f"api://indici-reports-assistant.onrender.com/{self.azure_client_id}/access_as_user")
 
     @property
     def teams_enable_sso(self) -> bool:
