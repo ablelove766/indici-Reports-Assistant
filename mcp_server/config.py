@@ -208,6 +208,21 @@ class Config:
         return os.getenv("AZURE_SCOPE") or self._config.get("azure_ad", {}).get("scope", "https://graph.microsoft.com/.default")
 
     @property
+    def azure_teams_scope(self) -> str:
+        """Get Azure AD Teams scope from environment or config."""
+        return os.getenv("AZURE_TEAMS_SCOPE") or self._config.get("azure_ad", {}).get("teams_scope", f"api://indici-reports-assistant.onrender.com/{self.azure_client_id}/access_as_user")
+
+    @property
+    def teams_enable_sso(self) -> bool:
+        """Get Teams SSO enable flag from environment or config."""
+        env_value = os.getenv("TEAMS_ENABLE_SSO", "").lower()
+        if env_value in ("true", "1", "yes", "on"):
+            return True
+        elif env_value in ("false", "0", "no", "off"):
+            return False
+        return self._config.get("teams", {}).get("enable_sso", True)
+
+    @property
     def teams_app_id(self) -> str:
         """Get Teams app ID from environment or config."""
         return os.getenv("TEAMS_APP_ID") or self._config.get("teams", {}).get("app_id", self.azure_client_id)

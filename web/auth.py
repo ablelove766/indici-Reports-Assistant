@@ -11,18 +11,44 @@ from flask import request, jsonify, session, g
 import sys
 
 # Configure detailed logging for SSO debugging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('sso_debug.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
+def setup_sso_logging():
+    """Setup SSO logging for both local and production environments."""
+    # Create specific logger for SSO operations
+    sso_logger = logging.getLogger('teams_sso')
+    sso_logger.setLevel(logging.DEBUG)
 
-# Create specific logger for SSO operations
-sso_logger = logging.getLogger('teams_sso')
-sso_logger.setLevel(logging.DEBUG)
+    # Remove existing handlers to avoid duplicates
+    for handler in sso_logger.handlers[:]:
+        sso_logger.removeHandler(handler)
+
+    # Create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+    # Always add console handler for Render.com
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(formatter)
+    sso_logger.addHandler(console_handler)
+
+    # Add file handler only if we can write files (local development)
+    try:
+        file_handler = logging.FileHandler('sso_debug.log')
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+        sso_logger.addHandler(file_handler)
+        sso_logger.info("[FILE] File logging enabled: sso_debug.log")
+    except (PermissionError, OSError):
+        sso_logger.info("[FILE] File logging disabled (production environment)")
+
+    # Ensure logs propagate to root logger for Render.com
+    sso_logger.propagate = True
+
+    return sso_logger
+
+# Setup SSO logger
+sso_logger = setup_sso_logging()
 
 # Import JWT with error handling
 try:
@@ -77,16 +103,17 @@ class TeamsAuthManager:
 
     def __init__(self):
         """Initialize Teams authentication manager."""
-        sso_logger.info("🔧 Initializing TeamsAuthManager...")
+        sso_logger.info("[INIT] Initializing TeamsAuthManager...")
 
         self.client_id = config.azure_client_id
         self.client_secret = config.azure_client_secret
         self.tenant_id = config.azure_tenant_id
         self.authority = config.azure_authority
-        self.scope = config.azure_scope
+        self.scope = config.azure_scope  # For Microsoft Graph API
+        self.teams_scope = config.azure_teams_scope  # For Teams SSO validation
 
         # Log configuration (mask sensitive data)
-        sso_logger.info(f"📋 Azure AD Configuration:")
+        sso_logger.info("[CONFIG] Azure AD Configuration:")
         sso_logger.info(f"   Client ID: {self.client_id}")
         sso_logger.info(f"   Tenant ID: {self.tenant_id}")
         sso_logger.info(f"   Authority: {self.authority}")
@@ -95,31 +122,31 @@ class TeamsAuthManager:
 
         # Validate configuration
         if not all([self.client_id, self.client_secret, self.tenant_id, self.authority]):
-            sso_logger.error("❌ Missing required Azure AD configuration!")
-            sso_logger.error(f"   Client ID: {'✅' if self.client_id else '❌'}")
-            sso_logger.error(f"   Client Secret: {'✅' if self.client_secret else '❌'}")
-            sso_logger.error(f"   Tenant ID: {'✅' if self.tenant_id else '❌'}")
-            sso_logger.error(f"   Authority: {'✅' if self.authority else '❌'}")
+            sso_logger.error("[ERROR] Missing required Azure AD configuration!")
+            sso_logger.error(f"   Client ID: {'OK' if self.client_id else 'MISSING'}")
+            sso_logger.error(f"   Client Secret: {'OK' if self.client_secret else 'MISSING'}")
+            sso_logger.error(f"   Tenant ID: {'OK' if self.tenant_id else 'MISSING'}")
+            sso_logger.error(f"   Authority: {'OK' if self.authority else 'MISSING'}")
             raise ValueError("Missing required Azure AD configuration")
 
         # Initialize MSAL client
         try:
-            sso_logger.info("🔐 Initializing MSAL client...")
+            sso_logger.info("[MSAL] Initializing MSAL client...")
             self.msal_app = ConfidentialClientApplication(
                 client_id=self.client_id,
                 client_credential=self.client_secret,
                 authority=self.authority
             )
-            sso_logger.info("✅ MSAL client initialized successfully")
+            sso_logger.info("[MSAL] MSAL client initialized successfully")
         except Exception as e:
-            sso_logger.error(f"❌ Failed to initialize MSAL client: {e}")
+            sso_logger.error(f"[ERROR] Failed to initialize MSAL client: {e}")
             raise
 
         # Cache for JWT public keys
         self._jwt_keys_cache = {}
         self._jwt_keys_cache_expiry = None
 
-        sso_logger.info("✅ TeamsAuthManager initialized successfully")
+        sso_logger.info("[SUCCESS] TeamsAuthManager initialized successfully")
         
     async def get_jwt_public_keys(self) -> Dict[str, Any]:
         """Get JWT public keys from Microsoft's well-known endpoint."""
@@ -257,7 +284,9 @@ class TeamsAuthManager:
     
     def exchange_token_for_graph_token(self, teams_token: str) -> Optional[str]:
         """Exchange Teams token for Microsoft Graph token using On-Behalf-Of flow."""
-        sso_logger.info("🔄 Starting token exchange using On-Behalf-Of flow...")
+        # Force immediate output for Render.com
+        print("[RENDER-AUTH] Starting token exchange using On-Behalf-Of flow...", flush=True)
+        sso_logger.info("[TOKEN] Starting token exchange using On-Behalf-Of flow...")
         sso_logger.debug(f"   Teams token (first 50 chars): {teams_token[:50]}...")
 
         try:
@@ -288,20 +317,26 @@ class TeamsAuthManager:
                     sso_logger.warning(f"⚠️ Audience mismatch!")
                     sso_logger.warning(f"   Expected: {expected_audience}")
                     sso_logger.warning(f"   Actual: {actual_audience}")
+                    sso_logger.warning(f"   Teams scope: {self.teams_scope}")
+                else:
+                    sso_logger.info(f"✅ Audience matches expected value")
 
             except Exception as token_decode_error:
                 sso_logger.error(f"❌ Failed to decode Teams token: {token_decode_error}")
 
             # Use MSAL to perform On-Behalf-Of flow
+            print("🔄 [RENDER-AUTH] Step 2: Performing MSAL On-Behalf-Of flow...", flush=True)
             sso_logger.info("🔄 Step 2: Performing MSAL On-Behalf-Of flow...")
             result = self.msal_app.acquire_token_on_behalf_of(
                 user_assertion=teams_token,
                 scopes=[self.scope]
             )
 
+            print(f"🔍 [RENDER-AUTH] MSAL result keys: {list(result.keys())}", flush=True)
             sso_logger.debug(f"   MSAL result keys: {list(result.keys())}")
 
             if "access_token" in result:
+                print("✅ [RENDER-AUTH] Token exchange successful!", flush=True)
                 sso_logger.info("✅ Token exchange successful!")
                 sso_logger.debug(f"   Access token (first 20 chars): {result['access_token'][:20]}...")
                 sso_logger.debug(f"   Token expires in: {result.get('expires_in', 'Unknown')} seconds")
@@ -311,6 +346,12 @@ class TeamsAuthManager:
                 error_desc = result.get('error_description', 'Unknown error')
                 correlation_id = result.get('correlation_id', 'No correlation ID')
 
+                print("❌ [RENDER-AUTH] Token exchange failed!", flush=True)
+                print(f"❌ [RENDER-AUTH] Error code: {error_code}", flush=True)
+                print(f"❌ [RENDER-AUTH] Error description: {error_desc}", flush=True)
+                print(f"❌ [RENDER-AUTH] Correlation ID: {correlation_id}", flush=True)
+                print(f"❌ [RENDER-AUTH] Full MSAL result: {result}", flush=True)
+
                 sso_logger.error("❌ Token exchange failed!")
                 sso_logger.error(f"   Error code: {error_code}")
                 sso_logger.error(f"   Error description: {error_desc}")
@@ -319,6 +360,10 @@ class TeamsAuthManager:
 
                 # Specific error handling for CAA20004
                 if "CAA20004" in error_desc or "AADSTS650057" in error_desc:
+                    print("🚨 [RENDER-AUTH] CAA20004 Error Detected!", flush=True)
+                    print("🚨 [RENDER-AUTH] This indicates missing admin consent for the API scope", flush=True)
+                    print("🚨 [RENDER-AUTH] Required action: Grant admin consent in Azure Portal", flush=True)
+
                     sso_logger.error("🚨 CAA20004 Error Detected!")
                     sso_logger.error("   This indicates missing admin consent for the API scope")
                     sso_logger.error("   Required action: Grant admin consent in Azure Portal")

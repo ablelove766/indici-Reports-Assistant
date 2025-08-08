@@ -24,12 +24,38 @@ from chatbot.chat_handler import chat_handler
 from chatbot.mcp_client import mcp_client
 from web.auth import auth_manager, require_teams_auth, get_current_user, get_teams_token
 
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, config.logging_level),
-    format=config.logging_format
-)
-logger = logging.getLogger(__name__)
+# Configure logging for production (Render.com compatible)
+def setup_production_logging():
+    """Setup logging that works on Render.com and locally."""
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    # Remove existing handlers to avoid duplicates
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+    # Console handler (works on Render.com)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(formatter)
+    root_logger.addHandler(console_handler)
+
+    # Set specific loggers to appropriate levels
+    logging.getLogger('werkzeug').setLevel(logging.INFO)
+    logging.getLogger('socketio').setLevel(logging.INFO)
+    logging.getLogger('engineio').setLevel(logging.INFO)
+    logging.getLogger('teams_sso').setLevel(logging.DEBUG)  # Our SSO logger
+
+    return logging.getLogger(__name__)
+
+logger = setup_production_logging()
+logger.info("[FLASK] Flask application logging initialized for production")
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -138,6 +164,25 @@ def teams_debug():
     """Microsoft Teams SSO debug page."""
     return render_template('teams_debug.html')
 
+@app.route('/test-logs')
+def test_logs():
+    """Test route to verify logging works on Render.com."""
+    print("🧪 [RENDER] Test logs route called", flush=True)
+    logger.info("🧪 Test logs route called")
+    logger.debug("🧪 Debug level log")
+    logger.warning("🧪 Warning level log")
+    logger.error("🧪 Error level log")
+
+    return jsonify({
+        "message": "Test logs generated",
+        "timestamp": datetime.now().isoformat(),
+        "azure_config": {
+            "client_id": config.azure_client_id,
+            "tenant_id": config.azure_tenant_id,
+            "teams_sso_enabled": config.teams_enable_sso
+        }
+    })
+
 @app.route('/teams/privacy')
 def teams_privacy():
     """Teams privacy policy page."""
@@ -216,43 +261,59 @@ def auth_callback():
 @app.route('/auth/token-exchange', methods=['POST'])
 def token_exchange():
     """Exchange Teams token for application token (On-Behalf-Of flow)."""
-    logger.info("🔄 Token exchange endpoint called")
+    # Force immediate log output
+    print("[RENDER] Token exchange endpoint called", flush=True)
+    logger.info("[TOKEN] Token exchange endpoint called")
     logger.debug(f"   Request headers: {dict(request.headers)}")
     logger.debug(f"   Request method: {request.method}")
     logger.debug(f"   Request URL: {request.url}")
     logger.debug(f"   Request remote addr: {request.remote_addr}")
 
+    # Also log to stdout directly for Render.com
+    print(f"[RENDER] Request URL: {request.url}", flush=True)
+    print(f"[RENDER] Request method: {request.method}", flush=True)
+    print(f"[RENDER] Request headers: {dict(request.headers)}", flush=True)
+
     try:
         data = request.get_json()
+        print(f"🔍 [RENDER] Request data keys: {list(data.keys()) if data else 'No data'}", flush=True)
         logger.debug(f"   Request data keys: {list(data.keys()) if data else 'No data'}")
 
         teams_token = data.get('token') if data else None
 
         if not teams_token:
+            print("❌ [RENDER] No Teams token provided in request", flush=True)
             logger.error("❌ No Teams token provided in request")
             return jsonify({"error": "Teams token required"}), 400
 
+        print(f"✅ [RENDER] Teams token received (length: {len(teams_token)})", flush=True)
         logger.info(f"   Teams token received (first 50 chars): {teams_token[:50]}...")
 
         # Validate Teams token
+        print("🔍 [RENDER] Step 1: Validating Teams token...", flush=True)
         logger.info("🔍 Step 1: Validating Teams token...")
         user_payload = auth_manager.validate_teams_token(teams_token)
         if not user_payload:
+            print("❌ [RENDER] Teams token validation failed", flush=True)
             logger.error("❌ Teams token validation failed")
             return jsonify({"error": "Invalid Teams token"}), 401
 
+        print(f"✅ [RENDER] Teams token validated for user: {user_payload.get('preferred_username', 'Unknown')}", flush=True)
         logger.info(f"✅ Teams token validated for user: {user_payload.get('preferred_username', 'Unknown')}")
 
         # Exchange for Graph token
+        print("🔄 [RENDER] Step 2: Exchanging Teams token for Graph token...", flush=True)
         logger.info("🔄 Step 2: Exchanging Teams token for Graph token...")
         graph_token = auth_manager.exchange_token_for_graph_token(teams_token)
         if not graph_token:
+            print("❌ [RENDER] Token exchange failed - this is likely the CAA20004 error", flush=True)
             logger.error("❌ Token exchange failed - this is likely the CAA20004 error")
             return jsonify({
                 "error": "Token exchange failed",
                 "details": "This is likely due to missing admin consent. Check Azure AD app permissions."
             }), 500
 
+        print("✅ [RENDER] Graph token obtained successfully", flush=True)
         logger.info("✅ Graph token obtained successfully")
 
         # Get user info from Graph
@@ -708,6 +769,15 @@ def internal_error(error):
 
 if __name__ == '__main__':
     try:
+        # Force immediate output for Render.com
+        print("[RENDER] Starting indici MCP Chatbot Web Interface...", flush=True)
+        print(f"[RENDER] Host: {config.web_interface_host}", flush=True)
+        print(f"[RENDER] Port: {config.web_interface_port}", flush=True)
+        print(f"[RENDER] Debug: {config.web_interface_debug}", flush=True)
+        print(f"[RENDER] Teams SSO enabled: {config.teams_enable_sso}", flush=True)
+        print(f"[RENDER] Azure Client ID: {config.azure_client_id}", flush=True)
+        print(f"[RENDER] Azure Tenant ID: {config.azure_tenant_id}", flush=True)
+
         logger.info(f"Starting indici MCP Chatbot Web Interface")
         logger.info(f"Host: {config.web_interface_host}")
         logger.info(f"Port: {config.web_interface_port}")

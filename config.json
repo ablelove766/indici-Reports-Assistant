@@ -26,6 +26,7 @@
     "tenant_id": "",
     "authority": "https://login.microsoftonline.com/82b5691e-b842-4527-b212-041c19c48d3e",
     "scope": "https://graph.microsoft.com/.default",
+    "teams_scope": "api://indici-reports-assistant.onrender.com/e2f9d05e-f417-47c8-9119-e8a7ecff07dd/access_as_user",
     "redirect_uri": "https://indici-reports-assistant.onrender.com/auth/callback"
   },
 
