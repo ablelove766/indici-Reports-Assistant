@@ -142,7 +142,7 @@ def index():
 
 @app.route('/teams')
 def teams_tab():
-    """Microsoft Teams tab interface with authentication check."""
+    """Microsoft Teams tab interface with immediate authentication check."""
     # Log Teams access for debugging
     print("[RENDER] Teams tab accessed", flush=True)
     logger.info("[TEAMS] Teams tab accessed")
@@ -150,25 +150,17 @@ def teams_tab():
     logger.info(f"[TEAMS] Request URL: {request.url}")
     logger.info(f"[TEAMS] Request args: {dict(request.args)}")
 
-    # Check if this is a request for authentication check
-    auth_check = request.args.get('auth_check', 'false').lower() == 'true'
-
-    if auth_check:
-        # This is an authentication check request
-        from auth import check_teams_auth
-        user_info = check_teams_auth()
-
-        if not user_info:
-            logger.warning("[TEAMS] Authentication check failed")
-            return redirect(url_for('auth_error'))
-        else:
-            logger.info(f"[TEAMS] Authentication check passed for: {user_info.get('preferred_username', 'Unknown')}")
-            # Redirect back to teams tab without auth_check parameter
-            return redirect(url_for('teams_tab'))
-
-    # For initial load, allow access but include authentication status
+    # Immediate authentication check - no loading states
     from auth import check_teams_auth
     user_info = check_teams_auth()
+
+    # If not authenticated, immediately redirect to error page
+    if not user_info:
+        logger.warning("[TEAMS] User not authenticated, redirecting to auth error page")
+        return redirect(url_for('auth_error'))
+
+    # Log successful authentication
+    logger.info(f"[TEAMS] User authenticated: {user_info.get('preferred_username', 'Unknown')}")
 
     # Get configuration parameters
     view_mode = request.args.get('view', 'full')
@@ -181,7 +173,7 @@ def teams_tab():
                          responsive_mode=responsive_mode,
                          practice_id=practice_id,
                          user_info=user_info,
-                         require_auth=True)
+                         authenticated=True)
 
 @app.route('/auth/error')
 def auth_error():
