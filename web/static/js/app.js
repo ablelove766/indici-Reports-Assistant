@@ -962,6 +962,13 @@ class IndiciChatApp {
      */
     setUserContext(user) {
         console.log('🔐 Setting user context:', user);
+
+        // Prevent duplicate authentication events
+        if (this.userContext && this.userContext.id === user.id) {
+            console.log('🔐 User context already set for this user, skipping duplicate');
+            return;
+        }
+
         this.userContext = user;
         this.isAuthenticated = true;
 
@@ -971,6 +978,7 @@ class IndiciChatApp {
                 user: user,
                 timestamp: new Date().toISOString()
             });
+            console.log('🔐 User authentication event sent to server');
         }
     }
 

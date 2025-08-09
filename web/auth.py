@@ -112,6 +112,16 @@ class TeamsAuthManager:
         self.scope = config.azure_scope  # For Microsoft Graph API
         self.teams_scope = config.azure_teams_scope  # For Teams SSO validation
 
+        # Extract tenant ID from authority if tenant_id is empty
+        if not self.tenant_id and self.authority:
+            import re
+            tenant_match = re.search(r'/([a-f0-9-]{36})/?$', self.authority)
+            if tenant_match:
+                self.tenant_id = tenant_match.group(1)
+                sso_logger.info(f"[CONFIG] Extracted tenant ID from authority: {self.tenant_id}")
+            else:
+                sso_logger.warning("[CONFIG] Could not extract tenant ID from authority URL")
+
         # Log configuration (mask sensitive data)
         sso_logger.info("[CONFIG] Azure AD Configuration:")
         sso_logger.info(f"   Client ID: {self.client_id}")
@@ -119,6 +129,13 @@ class TeamsAuthManager:
         sso_logger.info(f"   Authority: {self.authority}")
         sso_logger.info(f"   Scope: {self.scope}")
         sso_logger.info(f"   Client Secret: {'*' * (len(self.client_secret) - 4) + self.client_secret[-4:] if self.client_secret else 'NOT SET'}")
+
+        # Debug: Check if tenant ID is loaded correctly
+        import os
+        env_tenant_id = os.getenv("AZURE_TENANT_ID")
+        sso_logger.info(f"[DEBUG] Environment AZURE_TENANT_ID: {env_tenant_id}")
+        sso_logger.info(f"[DEBUG] Config tenant_id: {config.azure_tenant_id}")
+        sso_logger.info(f"[DEBUG] Final tenant_id used: {self.tenant_id}")
 
         # Validate configuration
         if not all([self.client_id, self.client_secret, self.tenant_id, self.authority]):
@@ -157,17 +174,31 @@ class TeamsAuthManager:
                 datetime.now() < self._jwt_keys_cache_expiry):
                 return self._jwt_keys_cache
 
-            # Try multiple discovery URLs
-            discovery_urls = [
-                f"https://login.microsoftonline.com/{self.tenant_id}/v2.0/.well-known/openid_configuration",
-                f"https://login.microsoftonline.com/{self.tenant_id}/.well-known/openid_configuration",
-                "https://login.microsoftonline.com/common/v2.0/.well-known/openid_configuration",
-                "https://login.microsoftonline.com/common/.well-known/openid_configuration"
-            ]
+            # Try tenant-specific URLs first, avoid /common unless absolutely necessary
+            discovery_urls = []
+
+            # Only add tenant-specific URLs if we have a valid tenant ID
+            if self.tenant_id and self.tenant_id.strip():
+                discovery_urls.extend([
+                    f"https://login.microsoftonline.com/{self.tenant_id}/.well-known/openid_configuration",
+                    f"https://login.microsoftonline.com/{self.tenant_id}/v2.0/.well-known/openid_configuration"
+                ])
+            else:
+                sso_logger.warning("[AUTH] No tenant ID available, will use common endpoint")
+
+            # Add common endpoints as fallback (but these should not be needed)
+            discovery_urls.extend([
+                "https://login.microsoftonline.com/common/.well-known/openid_configuration",
+                "https://login.microsoftonline.com/common/v2.0/.well-known/openid_configuration"
+            ])
+
+            sso_logger.info(f"[DEBUG] Tenant ID for discovery URLs: '{self.tenant_id}'")
+            sso_logger.info(f"[DEBUG] Discovery URLs to try: {discovery_urls}")
 
             discovery_data = None
-            for discovery_url in discovery_urls:
+            for i, discovery_url in enumerate(discovery_urls, 1):
                 try:
+                    sso_logger.info(f"[AUTH] Trying discovery URL {i}/{len(discovery_urls)}: {discovery_url}")
                     logger.info(f"Trying discovery URL: {discovery_url}")
                     print(f"[RENDER-AUTH] Trying discovery URL: {discovery_url}", flush=True)
                     discovery_response = requests.get(discovery_url, timeout=10)

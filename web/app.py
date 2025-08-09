@@ -334,12 +334,30 @@ def verify_auth():
 
             logger.info(f"[AUTH] Token verified and stored in session for user: {user_payload.get('preferred_username', 'Unknown')}")
 
+            # Extract user information from multiple possible fields
+            user_name = (user_payload.get('name') or
+                        user_payload.get('given_name', '') + ' ' + user_payload.get('family_name', '') or
+                        user_payload.get('preferred_username', '').split('@')[0] or
+                        'User').strip()
+
+            user_email = (user_payload.get('preferred_username') or
+                         user_payload.get('email') or
+                         user_payload.get('upn') or
+                         user_payload.get('unique_name') or '')
+
+            # Log available fields for debugging
+            logger.info(f"[AUTH] Available token fields: {list(user_payload.keys())}")
+            logger.info(f"[AUTH] Extracted name: '{user_name}', email: '{user_email}'")
+
             return jsonify({
                 "authenticated": True,
                 "user": {
-                    "name": user_payload.get('name', ''),
-                    "email": user_payload.get('preferred_username', ''),
-                    "id": user_payload.get('sub', '')
+                    "name": user_name,
+                    "email": user_email,
+                    "userPrincipalName": user_email,  # Add this for compatibility
+                    "preferred_username": user_email,  # Add this for compatibility
+                    "id": user_payload.get('sub', ''),
+                    "displayName": user_name  # Add this for compatibility
                 },
                 "success": True,
                 "session_stored": True
@@ -978,6 +996,19 @@ if __name__ == '__main__':
         print(f"[RENDER] Teams SSO enabled: {config.teams_enable_sso}", flush=True)
         print(f"[RENDER] Azure Client ID: {config.azure_client_id}", flush=True)
         print(f"[RENDER] Azure Tenant ID: {config.azure_tenant_id}", flush=True)
+
+        # Debug: Check environment variable loading
+        import os
+        env_tenant_id = os.getenv("AZURE_TENANT_ID")
+        print(f"[RENDER-DEBUG] Environment AZURE_TENANT_ID: {env_tenant_id}", flush=True)
+        print(f"[RENDER-DEBUG] Config azure_tenant_id: {config.azure_tenant_id}", flush=True)
+
+        # Test discovery URL
+        if config.azure_tenant_id:
+            discovery_url = f"https://login.microsoftonline.com/{config.azure_tenant_id}/.well-known/openid_configuration"
+            print(f"[RENDER-DEBUG] Expected discovery URL: {discovery_url}", flush=True)
+        else:
+            print("[RENDER-ERROR] No tenant ID found! Check .env file", flush=True)
 
         logger.info(f"Starting indici MCP Chatbot Web Interface")
         logger.info(f"Host: {config.web_interface_host}")

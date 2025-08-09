@@ -304,6 +304,13 @@ class TeamsAuthManager {
             // Update sidebar with user info
             const sidebarFooter = document.querySelector('.sidebar-footer');
             if (sidebarFooter) {
+                // Remove any existing user info to prevent duplicates
+                const existingUserInfo = sidebarFooter.querySelector('.user-info');
+                if (existingUserInfo) {
+                    existingUserInfo.remove();
+                    console.log('🧹 Removed existing user info from sidebar');
+                }
+
                 const userInfo = document.createElement('div');
                 userInfo.className = 'user-info';
                 userInfo.innerHTML = `
@@ -315,7 +322,7 @@ class TeamsAuthManager {
                         <div class="user-email">${user.mail || user.userPrincipalName || ''}</div>
                     </div>
                 `;
-                
+
                 // Insert before version info
                 const versionElement = sidebarFooter.querySelector('.version');
                 if (versionElement) {
@@ -323,6 +330,8 @@ class TeamsAuthManager {
                 } else {
                     sidebarFooter.appendChild(userInfo);
                 }
+
+                console.log('✅ Added user info to sidebar:', user.displayName || 'User');
             }
             
             // Update header to show authenticated state
