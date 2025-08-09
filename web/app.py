@@ -6,7 +6,7 @@ import json
 import traceback
 from flask import Flask, render_template, request, jsonify, make_response, session, g, redirect, url_for
 from flask_socketio import SocketIO, emit
-from datetime import datetime
+from datetime import datetime, timedelta
 try:
     from flask_session import Session
     FLASK_SESSION_AVAILABLE = True
@@ -150,25 +150,11 @@ def teams_tab():
     logger.info(f"[TEAMS] Request URL: {request.url}")
     logger.info(f"[TEAMS] Request args: {dict(request.args)}")
 
-    # Check session-based authentication first (most efficient and reliable)
+    # Simple session check (remove complex validation for now)
     user_info = session.get('user_info')
     teams_token = session.get('teams_token')
-    auth_timestamp = session.get('auth_timestamp')
 
-    # Validate session is not expired (24 hours)
-    session_valid = True
-    if auth_timestamp:
-        try:
-            from datetime import datetime, timedelta
-            auth_time = datetime.fromisoformat(auth_timestamp)
-            if datetime.now() - auth_time > timedelta(hours=24):
-                logger.info("[TEAMS] Session expired, clearing session data")
-                session.clear()
-                session_valid = False
-        except Exception as e:
-            logger.warning(f"[TEAMS] Error checking session timestamp: {e}")
-
-    if user_info and teams_token and session_valid:
+    if user_info and teams_token:
         # User is already authenticated via session - MOST RELIABLE PATH
         logger.info(f"[TEAMS] ✅ User authenticated via session: {user_info.get('preferred_username', 'Unknown')}")
 
