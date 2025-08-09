@@ -638,17 +638,8 @@
                     socket.on('connect', () => {
                         console.log('✅ Direct socket connected');
 
-                        // Add message to chat manually
-                        const chatMessages = document.getElementById('chat-messages');
-                        if (chatMessages) {
-                            const messageDiv = document.createElement('div');
-                            messageDiv.className = 'message user chat';
-                            messageDiv.innerHTML =
-                                '<div class="avatar">👤</div>' +
-                                '<div class="message-text">' + message + '</div>';
-                            chatMessages.appendChild(messageDiv);
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                        }
+                        // Message will be handled by the proper ChatApp.addMessage function
+                        // Remove duplicate message handling to prevent double messages
 
                         // Send to server
                         socket.emit('user_message', { message: message });

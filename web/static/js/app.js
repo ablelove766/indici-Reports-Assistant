@@ -1069,11 +1069,21 @@ class IndiciChatApp {
     addMessage(text, sender, type = 'chat', timestamp = null) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender} ${type}`;
-        
+
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
-        avatar.innerHTML = sender === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
-        
+
+        // For user messages, show email if available, otherwise show icon
+        if (sender === 'user' && this.userContext && this.userContext.userPrincipalName) {
+            // Show user email instead of icon
+            avatar.innerHTML = `<span class="user-email-label">${this.userContext.userPrincipalName}</span>`;
+            avatar.classList.add('user-email-avatar');
+        } else if (sender === 'user') {
+            avatar.innerHTML = '<i class="fas fa-user"></i>';
+        } else {
+            avatar.innerHTML = '<i class="fas fa-robot"></i>';
+        }
+
         const content = document.createElement('div');
         content.className = 'message-content';
         
