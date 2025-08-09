@@ -1649,7 +1649,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Register authentication state change handler
         window.teamsAuth.onAuthStateChange((user, error) => {
             if (user) {
-                console.log('✅ User authenticated:', user.displayName);
+                console.log('✅ User authenticated:', user.displayName || user.name || user.email);
+
+                // Update user info display in header
+                if (typeof updateUserInfoDisplay === 'function') {
+                    updateUserInfoDisplay(user);
+                }
+
                 // Update chat app with user context
                 if (window.chatApp) {
                     window.chatApp.setUserContext(user);

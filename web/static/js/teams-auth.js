@@ -276,11 +276,16 @@ class TeamsAuthManager {
      * Notify authentication success
      */
     notifyAuthSuccess(user) {
-        console.log('🎉 Authentication successful for user:', user.displayName);
-        
+        console.log('🎉 Authentication successful for user:', user.displayName || user.name || user.email);
+
         // Update UI to show authenticated state
         this.updateUIForAuthenticatedUser(user);
-        
+
+        // Update user info display in header (if function exists)
+        if (typeof updateUserInfoDisplay === 'function') {
+            updateUserInfoDisplay(user);
+        }
+
         // Notify callbacks about auth success
         this.authCallbacks.forEach(callback => {
             try {

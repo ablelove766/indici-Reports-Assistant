@@ -243,6 +243,112 @@
             font-size: 10px;
             color: rgba(255, 255, 255, 0.8);
         }
+
+        /* Professional User Info Display */
+        .user-info-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-left: auto;
+            margin-right: 16px;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            font-size: 24px;
+            color: var(--primary-color);
+            opacity: 0.9;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+            margin-top: 2px;
+        }
+
+        .auth-status-indicator {
+            font-size: 16px;
+            color: var(--success-color);
+        }
+
+        .auth-status-indicator .fa-spinner {
+            color: var(--primary-color);
+        }
+
+        /* Teams Dark Theme Support */
+        body[data-teams-theme="dark"] .user-info-display {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body[data-teams-theme="dark"] .user-name {
+            color: var(--dark-text-primary);
+        }
+
+        body[data-teams-theme="dark"] .user-email {
+            color: var(--dark-text-secondary);
+        }
+
+        body[data-teams-theme="dark"] .user-avatar {
+            color: #ffffff;
+            opacity: 0.8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .user-info-display {
+                min-width: 150px;
+                margin-right: 8px;
+            }
+
+            .user-name {
+                font-size: 13px;
+            }
+
+            .user-email {
+                font-size: 11px;
+            }
+
+            .user-avatar {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .user-info-display {
+                min-width: 120px;
+                gap: 8px;
+                padding: 6px 12px;
+            }
+
+            .user-details {
+                display: none; /* Hide text on very small screens, show only avatar and status */
+            }
+        }
     </style>
     {% endif %}
 </head>
@@ -315,32 +421,37 @@
                 <div class="header-info">
                     <h2><i class="fas fa-robot"></i> indici Reports Assistant</h2>
                     <p>Your intelligent assistant for indici Reports</p>
-                    {% if teams_mode %}
-                    <div class="teams-sso-controls" style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px;">
-                        <div style="margin-bottom: 10px;">
-                            <strong>Teams SSO Status:</strong>
-                            <span id="sso-status" style="font-size: 12px; margin-left: 10px;">Checking...</span>
-                        </div>
-                        <div style="margin-bottom: 10px;">
-                            <span id="user-info" style="font-size: 12px; color: #333;"></span>
-                        </div>
-                        <div>
-                            <button id="test-sso-btn" onclick="testTeamsSSO()" style="background: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
-                                Test Teams SSO
-                            </button>
-                            <button id="check-status-btn" onclick="checkSSOStatus()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
-                                Check Status
-                            </button>
-                            <button id="force-sso-btn" onclick="window.forceSSOTest && window.forceSSOTest()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
-                                Force SSO
-                            </button>
-                            <button id="debug-info-btn" onclick="console.log('SSO Debug Info:', window.getSSODebug && window.getSSODebug())" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
-                                Debug Info
-                            </button>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
+
+                <!-- User Info Display (Teams Mode) -->
+                {% if teams_mode and user_info %}
+                <div class="user-info-display">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">{{ user_info.get('name', user_info.get('preferred_username', 'User').split('@')[0]) }}</div>
+                        <div class="user-email">{{ user_info.get('preferred_username', user_info.get('email', '')) }}</div>
+                    </div>
+                    <div class="auth-status-indicator">
+                        <i class="fas fa-check-circle" title="Authenticated"></i>
+                    </div>
+                </div>
+                {% elif teams_mode %}
+                <div class="user-info-display" id="user-info-loading">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">Authenticating...</div>
+                        <div class="user-email">Please wait</div>
+                    </div>
+                    <div class="auth-status-indicator">
+                        <i class="fas fa-spinner fa-spin" title="Authenticating"></i>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="header-actions">
                     <button class="header-btn" onclick="clearChat()" title="Clear Chat">
                         <i class="fas fa-broom"></i>
@@ -1849,6 +1960,11 @@
                     } else {
                         // No authentication required or already handled
                         console.log('ℹ️ [TEAMS] No additional authentication required');
+                        // Hide loading user info if no auth required
+                        const loadingUserInfo = document.getElementById('user-info-loading');
+                        if (loadingUserInfo) {
+                            loadingUserInfo.style.display = 'none';
+                        }
                     }
 
                 }).catch((error) => {
@@ -1920,6 +2036,32 @@
                     console.warn('🔐 [TEAMS] Authentication required but not available, redirecting...');
                     window.location.href = '/auth/error';
                 }
+            }
+        }
+
+        // Function to update user info display
+        function updateUserInfoDisplay(user) {
+            const userInfoDisplay = document.getElementById('user-info-loading');
+            if (userInfoDisplay && user) {
+                // Extract name and email
+                const name = user.displayName || user.name || (user.email ? user.email.split('@')[0] : 'User');
+                const email = user.userPrincipalName || user.email || user.preferred_username || '';
+
+                // Update the display
+                userInfoDisplay.innerHTML = `
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">${name}</div>
+                        <div class="user-email">${email}</div>
+                    </div>
+                    <div class="auth-status-indicator">
+                        <i class="fas fa-check-circle" title="Authenticated"></i>
+                    </div>
+                `;
+                userInfoDisplay.id = 'user-info-authenticated';
+                console.log('✅ [TEAMS] User info display updated:', { name, email });
             }
         }
 
