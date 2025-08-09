@@ -150,13 +150,27 @@ def teams_tab():
     logger.info(f"[TEAMS] Request URL: {request.url}")
     logger.info(f"[TEAMS] Request args: {dict(request.args)}")
 
-    # Check session-based authentication first (most efficient)
+    # Check session-based authentication first (most efficient and reliable)
     user_info = session.get('user_info')
     teams_token = session.get('teams_token')
+    auth_timestamp = session.get('auth_timestamp')
 
-    if user_info and teams_token:
-        # User is already authenticated via session
-        logger.info(f"[TEAMS] User authenticated via session: {user_info.get('preferred_username', 'Unknown')}")
+    # Validate session is not expired (24 hours)
+    session_valid = True
+    if auth_timestamp:
+        try:
+            from datetime import datetime, timedelta
+            auth_time = datetime.fromisoformat(auth_timestamp)
+            if datetime.now() - auth_time > timedelta(hours=24):
+                logger.info("[TEAMS] Session expired, clearing session data")
+                session.clear()
+                session_valid = False
+        except Exception as e:
+            logger.warning(f"[TEAMS] Error checking session timestamp: {e}")
+
+    if user_info and teams_token and session_valid:
+        # User is already authenticated via session - MOST RELIABLE PATH
+        logger.info(f"[TEAMS] ✅ User authenticated via session: {user_info.get('preferred_username', 'Unknown')}")
 
         # Get configuration parameters
         view_mode = request.args.get('view', 'full')
@@ -170,19 +184,22 @@ def teams_tab():
                              practice_id=practice_id,
                              user_info=user_info,
                              authenticated=True,
-                             session_auth=True)
+                             session_auth=True,
+                             require_client_auth=False)  # No client auth needed!
 
-    # No session authentication - check headers for token
+    # No valid session - check headers for token (less reliable)
     from auth import check_teams_auth
     header_user_info = check_teams_auth()
 
     if header_user_info:
-        logger.info(f"[TEAMS] User authenticated via headers: {header_user_info.get('preferred_username', 'Unknown')}")
+        logger.info(f"[TEAMS] ⚠️ User authenticated via headers: {header_user_info.get('preferred_username', 'Unknown')}")
         user_info = header_user_info
         authenticated = True
+        require_client_auth = False
     else:
-        logger.info("[TEAMS] No authentication found, will require client-side authentication")
+        logger.info("[TEAMS] ❓ No authentication found, will require client-side authentication")
         authenticated = False
+        require_client_auth = True
 
     # Get configuration parameters
     view_mode = request.args.get('view', 'full')
@@ -196,7 +213,8 @@ def teams_tab():
                          practice_id=practice_id,
                          user_info=user_info,
                          authenticated=authenticated,
-                         require_client_auth=not authenticated)
+                         session_auth=False,
+                         require_client_auth=require_client_auth)
 
 @app.route('/auth/error')
 def auth_error():

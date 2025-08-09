@@ -1916,9 +1916,14 @@
                     microsoftTeams.app.notifyAppLoaded();
                     microsoftTeams.app.notifySuccess();
 
-                    // Apply Teams theme if available
+                    // Apply Teams theme if available (but don't change body theme)
                     if (context.app && context.app.theme) {
-                        document.body.setAttribute('data-teams-theme', context.app.theme);
+                        // Only apply theme to specific elements, not body
+                        const themeElements = document.querySelectorAll('.user-info-display, .auth-error-content');
+                        themeElements.forEach(el => {
+                            el.setAttribute('data-teams-theme', context.app.theme);
+                        });
+                        console.log(`🎨 [TEAMS] Applied theme to specific elements: ${context.app.theme}`);
                     }
 
                     // Handle authentication based on current status
@@ -1949,10 +1954,10 @@
                             console.log('🔐 [TEAMS] Initializing Teams authentication...');
                             initializeTeamsAuth();
 
-                            // Check authentication after Teams Auth is initialized
+                            // Attempt authentication after Teams Auth is initialized
                             setTimeout(() => {
-                                checkAuthenticationAndRedirect();
-                            }, 3000);
+                                attemptTeamsAuthentication();
+                            }, 2000);
                         } else {
                             console.warn('🔐 [TEAMS] Teams Auth not available, redirecting...');
                             window.location.href = '/auth/error';
@@ -1989,52 +1994,61 @@
             }
         }
 
-        // Function to check authentication and redirect if needed
-        function checkAuthenticationAndRedirect() {
-            console.log('🔐 [TEAMS] Checking authentication status...');
+        // Function to attempt Teams authentication (only when needed)
+        function attemptTeamsAuthentication() {
+            console.log('🔐 [TEAMS] Attempting Teams authentication...');
 
-            // Check if we have server-side authentication
-            if (serverUserInfo) {
-                console.log('🔐 [TEAMS] Server-side authentication found:', serverUserInfo.preferred_username || 'Unknown');
+            // Only proceed if we don't already have authentication
+            if (sessionAuth || isAuthenticated || serverUserInfo) {
+                console.log('✅ [TEAMS] User already authenticated, skipping SSO attempt');
                 return;
             }
 
-            // Check client-side authentication
+            // Check if Teams Auth is available and not already authenticated
             if (window.teamsAuth && window.teamsAuth.isAuthenticated()) {
-                console.log('🔐 [TEAMS] Client-side authentication found');
+                console.log('✅ [TEAMS] Teams Auth already authenticated');
                 checkSSOStatus();
                 return;
             }
 
             // Try to get Teams SSO token
             if (typeof microsoftTeams !== 'undefined' && microsoftTeams.authentication) {
-                console.log('🔐 [TEAMS] Attempting to get Teams SSO token...');
+                console.log('🔐 [TEAMS] Requesting Teams SSO token...');
 
                 const authTokenRequest = {
                     successCallback: (token) => {
-                        console.log('🔐 [TEAMS] Teams SSO token received, user is authenticated');
-                        // Token received, user is authenticated
+                        console.log('✅ [TEAMS] Teams SSO token received successfully');
                         if (window.teamsAuth) {
                             window.teamsAuth.handleTeamsToken(token);
                         }
-                        checkSSOStatus();
                     },
                     failureCallback: (error) => {
-                        console.warn('🔐 [TEAMS] Teams SSO failed:', error);
-                        // Authentication failed, redirect to error page
-                        if (requireClientAuth) {
-                            console.warn('🔐 [TEAMS] Authentication required but failed, redirecting to error page');
-                            window.location.href = '/auth/error';
+                        console.warn('⚠️ [TEAMS] Teams SSO failed:', error);
+                        // Only redirect if this is a critical error and auth is required
+                        const criticalErrors = ['ConsentRequired', 'UiRequired', 'InteractionRequired'];
+                        const isCritical = criticalErrors.some(err =>
+                            error.message && error.message.includes(err)
+                        );
+
+                        if (isCritical && requireClientAuth) {
+                            console.warn('🔐 [TEAMS] Critical auth error, redirecting to error page');
+                            setTimeout(() => {
+                                window.location.href = '/auth/error';
+                            }, 1000);
+                        } else {
+                            console.log('ℹ️ [TEAMS] Non-critical auth error, continuing without authentication');
                         }
                     }
                 };
 
                 microsoftTeams.authentication.getAuthToken(authTokenRequest);
             } else {
-                console.warn('🔐 [TEAMS] Teams authentication not available');
+                console.warn('⚠️ [TEAMS] Teams authentication not available');
                 if (requireClientAuth) {
                     console.warn('🔐 [TEAMS] Authentication required but not available, redirecting...');
-                    window.location.href = '/auth/error';
+                    setTimeout(() => {
+                        window.location.href = '/auth/error';
+                    }, 1000);
                 }
             }
         }

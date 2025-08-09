@@ -144,10 +144,14 @@
                     await microsoftTeams.app.initialize();
                     console.log('Teams SDK initialized for theme support');
 
-                    // Apply Teams theme
+                    // Apply Teams theme to specific elements only (don't change body)
                     const context = await microsoftTeams.app.getContext();
                     if (context.app && context.app.theme) {
-                        document.body.setAttribute('data-teams-theme', context.app.theme);
+                        const authContent = document.querySelector('.auth-error-content');
+                        if (authContent) {
+                            authContent.setAttribute('data-teams-theme', context.app.theme);
+                        }
+                        console.log(`Applied Teams theme: ${context.app.theme}`);
                     }
                 } else {
                     console.warn('Teams SDK not available');
