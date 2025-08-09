@@ -141,26 +141,28 @@ class TeamsAuthManager {
                 return false;
             }
 
-            console.log('🔄 [TeamsAuth] Sending token exchange request to /auth/token-exchange');
+            console.log('🔄 [TeamsAuth] Sending token verification request to /auth/verify');
 
-            // Exchange Teams token for Graph token via backend
-            const response = await fetch('/auth/token-exchange', {
+            // Verify Teams token with backend and store in session
+            const response = await fetch('/auth/verify', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Teams-Token': teamsToken
+                    'X-Teams-Token': teamsToken,
+                    'Authorization': `Bearer ${teamsToken}`
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     token: teamsToken
                 })
             });
 
-            console.log('🔍 [TeamsAuth] Token exchange response status:', response.status);
-            console.log('🔍 [TeamsAuth] Token exchange response headers:', Object.fromEntries(response.headers.entries()));
+            console.log('🔍 [TeamsAuth] Token verification response status:', response.status);
+            console.log('🔍 [TeamsAuth] Token verification response headers:', Object.fromEntries(response.headers.entries()));
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅ [TeamsAuth] Token exchange successful');
+                console.log('✅ [TeamsAuth] Token verification successful');
                 console.log('🔍 [TeamsAuth] Response data:', data);
 
                 this.currentUser = data.user;
@@ -172,7 +174,7 @@ class TeamsAuthManager {
                 return true;
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
-                console.error('❌ [TeamsAuth] Token exchange failed with status:', response.status);
+                console.error('❌ [TeamsAuth] Token verification failed with status:', response.status);
                 console.error('❌ [TeamsAuth] Error response:', errorData);
 
                 // Show user-friendly error for CAA20004

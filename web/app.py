@@ -142,7 +142,7 @@ def index():
 
 @app.route('/teams')
 def teams_tab():
-    """Microsoft Teams tab interface with immediate authentication check."""
+    """Microsoft Teams tab interface with session-based authentication."""
     # Log Teams access for debugging
     print("[RENDER] Teams tab accessed", flush=True)
     logger.info("[TEAMS] Teams tab accessed")
@@ -150,17 +150,39 @@ def teams_tab():
     logger.info(f"[TEAMS] Request URL: {request.url}")
     logger.info(f"[TEAMS] Request args: {dict(request.args)}")
 
-    # Immediate authentication check - no loading states
+    # Check session-based authentication first (most efficient)
+    user_info = session.get('user_info')
+    teams_token = session.get('teams_token')
+
+    if user_info and teams_token:
+        # User is already authenticated via session
+        logger.info(f"[TEAMS] User authenticated via session: {user_info.get('preferred_username', 'Unknown')}")
+
+        # Get configuration parameters
+        view_mode = request.args.get('view', 'full')
+        responsive_mode = request.args.get('responsive', 'auto')
+        practice_id = request.args.get('practiceId', '')
+
+        return render_template('index.html',
+                             teams_mode=True,
+                             view_mode=view_mode,
+                             responsive_mode=responsive_mode,
+                             practice_id=practice_id,
+                             user_info=user_info,
+                             authenticated=True,
+                             session_auth=True)
+
+    # No session authentication - check headers for token
     from auth import check_teams_auth
-    user_info = check_teams_auth()
+    header_user_info = check_teams_auth()
 
-    # If not authenticated, immediately redirect to error page
-    if not user_info:
-        logger.warning("[TEAMS] User not authenticated, redirecting to auth error page")
-        return redirect(url_for('auth_error'))
-
-    # Log successful authentication
-    logger.info(f"[TEAMS] User authenticated: {user_info.get('preferred_username', 'Unknown')}")
+    if header_user_info:
+        logger.info(f"[TEAMS] User authenticated via headers: {header_user_info.get('preferred_username', 'Unknown')}")
+        user_info = header_user_info
+        authenticated = True
+    else:
+        logger.info("[TEAMS] No authentication found, will require client-side authentication")
+        authenticated = False
 
     # Get configuration parameters
     view_mode = request.args.get('view', 'full')
@@ -173,7 +195,8 @@ def teams_tab():
                          responsive_mode=responsive_mode,
                          practice_id=practice_id,
                          user_info=user_info,
-                         authenticated=True)
+                         authenticated=authenticated,
+                         require_client_auth=not authenticated)
 
 @app.route('/auth/error')
 def auth_error():
@@ -278,6 +301,106 @@ def check_auth_status():
             "authenticated": False,
             "error": "Failed to check authentication status",
             "success": False
+        }), 500
+
+@app.route('/auth/verify', methods=['POST'])
+def verify_auth():
+    """Verify Teams SSO token and store authentication."""
+    try:
+        data = request.get_json()
+        token = data.get('token') if data else None
+
+        if not token:
+            return jsonify({
+                "authenticated": False,
+                "error": "No token provided",
+                "success": False
+            }), 400
+
+        # Validate the token
+        from auth import auth_manager
+        user_payload = auth_manager.validate_teams_token(token)
+
+        if user_payload:
+            # Store token in session with timestamp
+            session['teams_token'] = token
+            session['user_info'] = user_payload
+            session['auth_timestamp'] = datetime.now().isoformat()
+            session.permanent = True  # Make session persistent
+
+            logger.info(f"[AUTH] Token verified and stored in session for user: {user_payload.get('preferred_username', 'Unknown')}")
+
+            return jsonify({
+                "authenticated": True,
+                "user": {
+                    "name": user_payload.get('name', ''),
+                    "email": user_payload.get('preferred_username', ''),
+                    "id": user_payload.get('sub', '')
+                },
+                "success": True,
+                "session_stored": True
+            })
+        else:
+            return jsonify({
+                "authenticated": False,
+                "error": "Invalid token",
+                "success": False
+            }), 401
+
+    except Exception as e:
+        logger.error(f"Error verifying auth token: {e}")
+        return jsonify({
+            "authenticated": False,
+            "error": "Failed to verify authentication",
+            "success": False
+        }), 500
+
+@app.route('/auth/session-check')
+def check_session():
+    """Check if user session is still valid."""
+    try:
+        user_info = session.get('user_info')
+        teams_token = session.get('teams_token')
+        auth_timestamp = session.get('auth_timestamp')
+
+        if user_info and teams_token:
+            # Check if session is not too old (optional - you can set a timeout)
+            if auth_timestamp:
+                from datetime import datetime, timedelta
+                auth_time = datetime.fromisoformat(auth_timestamp)
+                # Session valid for 24 hours
+                if datetime.now() - auth_time > timedelta(hours=24):
+                    # Session expired, clear it
+                    session.clear()
+                    return jsonify({
+                        "authenticated": False,
+                        "session_valid": False,
+                        "reason": "Session expired"
+                    })
+
+            return jsonify({
+                "authenticated": True,
+                "session_valid": True,
+                "user": {
+                    "name": user_info.get('name', ''),
+                    "email": user_info.get('preferred_username', ''),
+                    "id": user_info.get('sub', '')
+                },
+                "auth_timestamp": auth_timestamp
+            })
+        else:
+            return jsonify({
+                "authenticated": False,
+                "session_valid": False,
+                "reason": "No session data"
+            })
+
+    except Exception as e:
+        logger.error(f"Error checking session: {e}")
+        return jsonify({
+            "authenticated": False,
+            "session_valid": False,
+            "error": "Failed to check session"
         }), 500
 
 @app.route('/auth/login')
