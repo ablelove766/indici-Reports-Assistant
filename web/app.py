@@ -4,7 +4,7 @@ import asyncio
 import logging
 import json
 import traceback
-from flask import Flask, render_template, request, jsonify, make_response, session, g
+from flask import Flask, render_template, request, jsonify, make_response, session, g, redirect, url_for
 from flask_socketio import SocketIO, emit
 from datetime import datetime
 try:
@@ -142,13 +142,33 @@ def index():
 
 @app.route('/teams')
 def teams_tab():
-    """Microsoft Teams tab interface."""
+    """Microsoft Teams tab interface with authentication check."""
     # Log Teams access for debugging
     print("[RENDER] Teams tab accessed", flush=True)
     logger.info("[TEAMS] Teams tab accessed")
     logger.info(f"[TEAMS] User-Agent: {request.headers.get('User-Agent', 'Unknown')}")
     logger.info(f"[TEAMS] Request URL: {request.url}")
     logger.info(f"[TEAMS] Request args: {dict(request.args)}")
+
+    # Check if this is a request for authentication check
+    auth_check = request.args.get('auth_check', 'false').lower() == 'true'
+
+    if auth_check:
+        # This is an authentication check request
+        from auth import check_teams_auth
+        user_info = check_teams_auth()
+
+        if not user_info:
+            logger.warning("[TEAMS] Authentication check failed")
+            return redirect(url_for('auth_error'))
+        else:
+            logger.info(f"[TEAMS] Authentication check passed for: {user_info.get('preferred_username', 'Unknown')}")
+            # Redirect back to teams tab without auth_check parameter
+            return redirect(url_for('teams_tab'))
+
+    # For initial load, allow access but include authentication status
+    from auth import check_teams_auth
+    user_info = check_teams_auth()
 
     # Get configuration parameters
     view_mode = request.args.get('view', 'full')
@@ -159,7 +179,15 @@ def teams_tab():
                          teams_mode=True,
                          view_mode=view_mode,
                          responsive_mode=responsive_mode,
-                         practice_id=practice_id)
+                         practice_id=practice_id,
+                         user_info=user_info,
+                         require_auth=True)
+
+@app.route('/auth/error')
+def auth_error():
+    """Authentication error page for unauthenticated users."""
+    logger.info("[AUTH] Authentication error page accessed")
+    return render_template('auth_error.html')
 
 @app.route('/teams/config')
 def teams_config():
@@ -229,6 +257,36 @@ def teams_terms():
 # ============================================================================
 # MICROSOFT TEAMS SSO AUTHENTICATION ROUTES
 # ============================================================================
+
+@app.route('/auth/status')
+def check_auth_status():
+    """Check authentication status."""
+    try:
+        from auth import check_teams_auth
+        user_info = check_teams_auth()
+
+        if user_info:
+            return jsonify({
+                "authenticated": True,
+                "user": {
+                    "name": user_info.get('name', ''),
+                    "email": user_info.get('preferred_username', ''),
+                    "id": user_info.get('sub', '')
+                },
+                "success": True
+            })
+        else:
+            return jsonify({
+                "authenticated": False,
+                "success": True
+            })
+    except Exception as e:
+        logger.error(f"Error checking auth status: {e}")
+        return jsonify({
+            "authenticated": False,
+            "error": "Failed to check authentication status",
+            "success": False
+        }), 500
 
 @app.route('/auth/login')
 def auth_login():
@@ -428,25 +486,7 @@ def auth_logout():
             "success": False
         }), 500
 
-@app.route('/auth/status')
-def auth_status():
-    """Get current authentication status."""
-    try:
-        user_info = session.get('user_info')
-        access_token = session.get('access_token')
 
-        return jsonify({
-            "authenticated": bool(user_info and access_token),
-            "user": user_info if user_info else None,
-            "timestamp": datetime.now().isoformat()
-        })
-
-    except Exception as e:
-        logger.error(f"Error getting auth status: {e}")
-        return jsonify({
-            "authenticated": False,
-            "error": str(e)
-        }), 500
 
 @app.route('/api/health')
 def health_check():
@@ -647,12 +687,17 @@ def handle_disconnect():
 
 @socketio.on('user_message')
 def handle_user_message(data):
-    """Handle incoming user message."""
+    """Handle incoming user message with authentication check."""
     try:
         session_id = request.sid
         message = data.get('message', '').strip()
         user_context = data.get('userContext')
         is_authenticated = data.get('isAuthenticated', False)
+
+        # Check server-side authentication status
+        from auth import check_teams_auth
+        server_auth_info = check_teams_auth()
+        server_authenticated = server_auth_info is not None
 
         if not message:
             emit('bot_message', {
@@ -668,10 +713,14 @@ def handle_user_message(data):
             if user_context:
                 active_sessions[session_id]["user_context"] = user_context
                 active_sessions[session_id]["authenticated"] = is_authenticated
+                active_sessions[session_id]["server_authenticated"] = server_authenticated
 
         logger.info(f"📨 Received message from {session_id}: '{message}'")
+        logger.info(f"🔐 Authentication status - Client: {is_authenticated}, Server: {server_authenticated}")
         if user_context:
             logger.info(f"👤 User: {user_context.get('displayName', 'Unknown')} ({user_context.get('userPrincipalName', 'Unknown')})")
+        if server_auth_info:
+            logger.info(f"🔐 Server auth user: {server_auth_info.get('preferred_username', 'Unknown')}")
         logger.info(f"Session info: {active_sessions.get(session_id, 'Unknown')}")
 
         # Show typing indicator

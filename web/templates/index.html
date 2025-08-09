@@ -1776,6 +1776,10 @@
     {% if teams_mode %}
     <!-- Teams-specific initialization -->
     <script>
+        // Check if authentication is required
+        const requireAuth = {{ require_auth|tojson if require_auth else 'false' }};
+        const userInfo = {{ user_info|tojson if user_info else 'null' }};
+
         // Initialize Microsoft Teams SDK
         if (typeof microsoftTeams !== 'undefined') {
             microsoftTeams.app.initialize().then(() => {
@@ -1797,29 +1801,76 @@
                         document.body.setAttribute('data-teams-theme', context.app.theme);
                     }
 
-                    // Automatically check status and trigger SSO after Teams context is loaded
-                    console.log('[TEAMS-AUTO] Teams context loaded, checking SSO status...');
-                    setTimeout(() => {
-                        checkSSOStatus();
+                    // Check authentication status if required
+                    if (requireAuth && !userInfo) {
+                        console.warn('🔐 [TEAMS] Authentication required but user not authenticated');
 
-                        // Auto-trigger SSO if not authenticated
-                        if (window.teamsAuth && !window.teamsAuth.isAuthenticated()) {
-                            console.log('[TEAMS-AUTO] Not authenticated, triggering SSO...');
-                            window.teamsAuth.debugAuth();
+                        // Initialize Teams Auth if available
+                        if (typeof initializeTeamsAuth === 'function') {
+                            console.log('🔐 [TEAMS] Initializing Teams authentication...');
+                            initializeTeamsAuth();
 
-                            // Check again after SSO attempt
-                            setTimeout(checkSSOStatus, 3000);
+                            // Give Teams Auth time to initialize, then check status
+                            setTimeout(() => {
+                                if (window.teamsAuth) {
+                                    window.teamsAuth.checkAuthenticationStatus().then((isAuthenticated) => {
+                                        if (!isAuthenticated) {
+                                            console.warn('🔐 [TEAMS] Authentication check failed, redirecting...');
+                                            window.location.href = '/auth/error';
+                                        }
+                                    });
+                                } else {
+                                    console.warn('🔐 [TEAMS] Teams Auth not available, redirecting to auth error');
+                                    window.location.href = '/auth/error';
+                                }
+                            }, 3000);
+                        } else {
+                            console.warn('🔐 [TEAMS] Teams Auth initialization function not available');
+                            window.location.href = '/auth/error';
                         }
-                    }, 2000);
+                    } else {
+                        // Initialize Teams Auth for authenticated users
+                        if (typeof initializeTeamsAuth === 'function') {
+                            console.log('🔐 [TEAMS] Initializing Teams authentication...');
+                            initializeTeamsAuth();
+                        }
+
+                        // Automatically check status and trigger SSO after Teams context is loaded
+                        console.log('[TEAMS-AUTO] Teams context loaded, checking SSO status...');
+                        setTimeout(() => {
+                            checkSSOStatus();
+
+                            // Auto-trigger SSO if not authenticated
+                            if (window.teamsAuth && !window.teamsAuth.isAuthenticated()) {
+                                console.log('[TEAMS-AUTO] Not authenticated, triggering SSO...');
+                                window.teamsAuth.debugAuth();
+
+                                // Check again after SSO attempt
+                                setTimeout(checkSSOStatus, 3000);
+                            }
+                        }, 2000);
+                    }
 
                 }).catch((error) => {
                     console.error('Failed to get Teams context:', error);
+                    if (requireAuth) {
+                        console.warn('🔐 [TEAMS] Failed to get context and auth required, redirecting...');
+                        window.location.href = '/auth/error';
+                    }
                 });
             }).catch((error) => {
                 console.error('Failed to initialize Teams SDK:', error);
+                if (requireAuth) {
+                    console.warn('🔐 [TEAMS] Failed to initialize SDK and auth required, redirecting...');
+                    window.location.href = '/auth/error';
+                }
             });
         } else {
             console.warn('Teams SDK not available - running in standalone mode');
+            if (requireAuth) {
+                console.warn('🔐 [TEAMS] Teams SDK not available and auth required, redirecting...');
+                window.location.href = '/auth/error';
+            }
         }
 
         // Check SSO status function

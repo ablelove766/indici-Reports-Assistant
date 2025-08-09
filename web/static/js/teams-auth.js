@@ -63,6 +63,11 @@ class TeamsAuthManager {
             // Attempt silent authentication
             await this.performSilentAuth();
 
+            // Check authentication status after initialization
+            setTimeout(() => {
+                this.checkAuthenticationStatus();
+            }, 2000);
+
         } catch (error) {
             console.error('❌ [TeamsAuth] Failed to initialize Teams SDK:', error);
             console.error('❌ [TeamsAuth] Error details:', error.message, error.stack);
@@ -192,8 +197,33 @@ class TeamsAuthManager {
      * Handle authentication failure
      */
     handleAuthFailure(error) {
-        console.warn('🔐 Authentication failed, continuing without auth:', error);
-        
+        console.warn('🔐 Authentication failed:', error);
+
+        // Check if we're in Teams mode and should redirect to auth error page
+        if (document.body.classList.contains('teams-mode')) {
+            console.log('🔐 Teams mode detected, checking if redirect is needed...');
+
+            // Check if this is a critical authentication failure
+            const criticalErrors = [
+                'ConsentRequired',
+                'UiRequired',
+                'InteractionRequired',
+                'TokenExpired',
+                'InvalidGrant'
+            ];
+
+            const errorCode = error?.errorCode || error?.code || '';
+            const isCriticalError = criticalErrors.some(code =>
+                errorCode.includes(code) || (error?.message && error.message.includes(code))
+            );
+
+            if (isCriticalError) {
+                console.warn('🔐 Critical authentication error detected, redirecting to auth error page');
+                this.redirectToAuthError();
+                return;
+            }
+        }
+
         // Notify callbacks about auth failure
         this.authCallbacks.forEach(callback => {
             try {
@@ -202,6 +232,42 @@ class TeamsAuthManager {
                 console.error('Error in auth callback:', e);
             }
         });
+    }
+
+    /**
+     * Redirect to authentication error page
+     */
+    redirectToAuthError() {
+        console.log('🔐 Redirecting to authentication error page...');
+        window.location.href = '/auth/error';
+    }
+
+    /**
+     * Check authentication status and redirect if needed
+     */
+    async checkAuthenticationStatus() {
+        try {
+            // Make a request to check authentication status
+            const response = await fetch('/teams?auth_check=true', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'X-Teams-Token': this.currentToken || '',
+                    'Authorization': this.currentToken ? `Bearer ${this.currentToken}` : ''
+                }
+            });
+
+            if (response.status === 401 || response.redirected) {
+                console.warn('🔐 Authentication check failed, redirecting to auth error page');
+                this.redirectToAuthError();
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('🔐 Error checking authentication status:', error);
+            return false;
+        }
     }
     
     /**

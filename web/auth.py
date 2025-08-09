@@ -7,7 +7,7 @@ import requests
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Dict, Any, Optional
-from flask import request, jsonify, session, g
+from flask import request, jsonify, session, g, redirect, url_for
 import sys
 
 # Configure detailed logging for SSO debugging
@@ -439,32 +439,105 @@ def require_teams_auth(f):
         # Check for Teams token in headers
         auth_header = request.headers.get('Authorization')
         teams_token = request.headers.get('X-Teams-Token')
-        
+
         if not auth_header and not teams_token:
             return jsonify({"error": "Authentication required"}), 401
-        
+
         # Extract token
         token = None
         if auth_header and auth_header.startswith('Bearer '):
             token = auth_header[7:]
         elif teams_token:
             token = teams_token
-        
+
         if not token:
             return jsonify({"error": "Invalid authentication format"}), 401
-        
+
         # Validate token
         user_payload = auth_manager.validate_teams_token(token)
         if not user_payload:
             return jsonify({"error": "Invalid or expired token"}), 401
-        
+
         # Store user info in Flask's g object
         g.current_user = user_payload
         g.teams_token = token
-        
+
         return f(*args, **kwargs)
-    
+
     return decorated_function
+
+def require_teams_auth_page(f):
+    """Decorator to require Teams authentication for page routes - redirects to auth error page."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check for Teams token in headers
+        auth_header = request.headers.get('Authorization')
+        teams_token = request.headers.get('X-Teams-Token')
+
+        # For page routes, also check for token in session or cookies
+        session_token = session.get('teams_token')
+
+        token = None
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header[7:]
+        elif teams_token:
+            token = teams_token
+        elif session_token:
+            token = session_token
+
+        # If no token found, redirect to auth error page
+        if not token:
+            logger.warning("No authentication token found, redirecting to auth error page")
+            return redirect(url_for('auth_error'))
+
+        # Validate token
+        user_payload = auth_manager.validate_teams_token(token)
+        if not user_payload:
+            logger.warning("Invalid or expired token, redirecting to auth error page")
+            # Clear invalid token from session
+            session.pop('teams_token', None)
+            return redirect(url_for('auth_error'))
+
+        # Store user info in Flask's g object and session
+        g.current_user = user_payload
+        g.teams_token = token
+        session['teams_token'] = token
+        session['user_info'] = user_payload
+
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+def check_teams_auth():
+    """Check if user is authenticated with Teams SSO. Returns user info or None."""
+    # Check for Teams token in headers
+    auth_header = request.headers.get('Authorization')
+    teams_token = request.headers.get('X-Teams-Token')
+    session_token = session.get('teams_token')
+
+    token = None
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header[7:]
+    elif teams_token:
+        token = teams_token
+    elif session_token:
+        token = session_token
+
+    if not token:
+        return None
+
+    # Validate token
+    user_payload = auth_manager.validate_teams_token(token)
+    if user_payload:
+        # Store in session for future requests
+        session['teams_token'] = token
+        session['user_info'] = user_payload
+        return user_payload
+    else:
+        # Clear invalid token from session
+        session.pop('teams_token', None)
+        session.pop('user_info', None)
+        return None
 
 def get_current_user() -> Optional[Dict[str, Any]]:
     """Get current authenticated user from Flask's g object."""

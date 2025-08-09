@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Required - Indici Reports Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Teams SDK for authentication retry -->
+    <script src="https://res.cdn.office.net/teams-js/2.0.0/js/MicrosoftTeams.min.js"></script>
+</head>
+<body class="teams-mode">
+    <div class="auth-error-container">
+        <div class="auth-error-content">
+            <div class="auth-error-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>Authentication Required</h1>
+            <p class="auth-error-message">
+                You need to be authenticated with your Microsoft account to access the Indici Reports Assistant.
+            </p>
+            <div class="auth-error-details">
+                <p><i class="fas fa-info-circle"></i> This application requires Microsoft Teams Single Sign-On (SSO) authentication.</p>
+                <p><i class="fas fa-user-check"></i> Please ensure you're signed in to Microsoft Teams with your organization account.</p>
+            </div>
+            
+            <div class="auth-actions">
+                <button id="retry-auth-btn" class="btn-primary">
+                    <i class="fas fa-redo"></i>
+                    Try Authentication Again
+                </button>
+                <button id="manual-login-btn" class="btn-secondary">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Manual Login
+                </button>
+            </div>
+            
+            <div class="auth-status" id="auth-status" style="display: none;">
+                <div class="status-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Attempting authentication...</span>
+                </div>
+            </div>
+            
+            <div class="troubleshooting">
+                <details>
+                    <summary><i class="fas fa-question-circle"></i> Troubleshooting</summary>
+                    <div class="troubleshooting-content">
+                        <h4>If you're having trouble:</h4>
+                        <ul>
+                            <li>Ensure you're signed in to Microsoft Teams</li>
+                            <li>Check that your organization allows this application</li>
+                            <li>Try refreshing the page or restarting Teams</li>
+                            <li>Contact your IT administrator if the issue persists</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .auth-error-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-secondary);
+            padding: var(--spacing-md);
+        }
+        
+        .auth-error-content {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .auth-error-icon {
+            font-size: 4rem;
+            color: var(--warning-color);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .auth-error-content h1 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            font-size: var(--font-size-2xl);
+        }
+        
+        .auth-error-message {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-lg);
+        }
+        
+        .auth-error-details {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            text-align: left;
+        }
+        
+        .auth-error-details p {
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .auth-error-details p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .auth-error-details i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+        
+        .auth-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .btn-primary, .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: var(--font-size-base);
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+        }
+        
+        .auth-status {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            color: var(--primary-color);
+        }
+        
+        .troubleshooting {
+            margin-top: var(--spacing-xl);
+            text-align: left;
+        }
+        
+        .troubleshooting details {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+        }
+        
+        .troubleshooting summary {
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .troubleshooting summary:hover {
+            color: var(--primary-color);
+        }
+        
+        .troubleshooting-content {
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .troubleshooting-content h4 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .troubleshooting-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .troubleshooting-content li {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+            padding-left: var(--spacing-md);
+            position: relative;
+        }
+        
+        .troubleshooting-content li::before {
+            content: "•";
+            color: var(--primary-color);
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Dark theme support for Teams */
+        body[data-teams-theme="dark"] .auth-error-container {
+            background: var(--dark-bg-primary);
+        }
+        
+        body[data-teams-theme="dark"] .auth-error-content {
+            background: var(--dark-bg-secondary);
+        }
+        
+        body[data-teams-theme="dark"] .auth-error-content h1 {
+            color: var(--dark-text-primary);
+        }
+        
+        body[data-teams-theme="dark"] .auth-error-message {
+            color: var(--dark-text-secondary);
+        }
+        
+        body[data-teams-theme="dark"] .auth-error-details {
+            background: var(--dark-bg-tertiary);
+        }
+        
+        body[data-teams-theme="dark"] .auth-error-details p {
+            color: var(--dark-text-secondary);
+        }
+        
+        body[data-teams-theme="dark"] .btn-secondary {
+            background: var(--dark-bg-tertiary);
+            color: var(--dark-text-primary);
+            border-color: var(--dark-border);
+        }
+        
+        body[data-teams-theme="dark"] .btn-secondary:hover {
+            background: var(--dark-bg-primary);
+        }
+        
+        body[data-teams-theme="dark"] .auth-status {
+            background: var(--dark-bg-tertiary);
+        }
+        
+        body[data-teams-theme="dark"] .troubleshooting details {
+            background: var(--dark-bg-tertiary);
+        }
+        
+        body[data-teams-theme="dark"] .troubleshooting summary {
+            color: var(--dark-text-primary);
+        }
+        
+        body[data-teams-theme="dark"] .troubleshooting-content {
+            border-top-color: var(--dark-border);
+        }
+        
+        body[data-teams-theme="dark"] .troubleshooting-content h4 {
+            color: var(--dark-text-primary);
+        }
+        
+        body[data-teams-theme="dark"] .troubleshooting-content li {
+            color: var(--dark-text-secondary);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .auth-error-content {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-sm);
+            }
+            
+            .auth-error-icon {
+                font-size: 3rem;
+            }
+            
+            .auth-actions {
+                gap: var(--spacing-sm);
+            }
+        }
+    </style>
+
+    <script>
+        // Initialize Teams SDK and handle authentication
+        let teamsInitialized = false;
+
+        async function initializeTeams() {
+            try {
+                if (typeof microsoftTeams !== 'undefined') {
+                    await microsoftTeams.app.initialize();
+                    teamsInitialized = true;
+                    console.log('Teams SDK initialized successfully');
+
+                    // Apply Teams theme
+                    const context = await microsoftTeams.app.getContext();
+                    if (context.app.theme) {
+                        document.body.setAttribute('data-teams-theme', context.app.theme);
+                    }
+                } else {
+                    console.warn('Teams SDK not available');
+                }
+            } catch (error) {
+                console.error('Failed to initialize Teams SDK:', error);
+            }
+        }
+
+        async function attemptAuthentication() {
+            const statusEl = document.getElementById('auth-status');
+            const retryBtn = document.getElementById('retry-auth-btn');
+
+            statusEl.style.display = 'block';
+            retryBtn.disabled = true;
+
+            try {
+                if (!teamsInitialized) {
+                    await initializeTeams();
+                }
+
+                if (teamsInitialized) {
+                    // Request Teams SSO token
+                    const authTokenRequest = {
+                        successCallback: (token) => {
+                            console.log('Authentication successful, redirecting...');
+                            // Redirect back to Teams tab with authentication
+                            window.location.href = '/teams';
+                        },
+                        failureCallback: (error) => {
+                            console.error('Authentication failed:', error);
+                            statusEl.style.display = 'none';
+                            retryBtn.disabled = false;
+                            showError('Authentication failed. Please try again or contact your administrator.');
+                        }
+                    };
+
+                    microsoftTeams.authentication.getAuthToken(authTokenRequest);
+                } else {
+                    throw new Error('Teams SDK not available');
+                }
+            } catch (error) {
+                console.error('Authentication attempt failed:', error);
+                statusEl.style.display = 'none';
+                retryBtn.disabled = false;
+                showError('Unable to authenticate. Please ensure you are using Microsoft Teams.');
+            }
+        }
+
+        function showError(message) {
+            const statusEl = document.getElementById('auth-status');
+            statusEl.innerHTML = `
+                <div class="status-indicator" style="color: var(--error-color);">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            statusEl.style.display = 'block';
+        }
+
+        function handleManualLogin() {
+            // Redirect to manual login flow
+            window.location.href = '/auth/login';
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTeams();
+
+            document.getElementById('retry-auth-btn').addEventListener('click', attemptAuthentication);
+            document.getElementById('manual-login-btn').addEventListener('click', handleManualLogin);
+        });
+    </script>
+</body>
+</html>
