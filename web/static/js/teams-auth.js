@@ -27,11 +27,6 @@ class TeamsAuthManager {
             this.disableMessageInput();
             console.log('✅ [TeamsAuth] Message input state initialized - disabled until authentication');
             
-            // Also add a visual indicator that chat is disabled initially
-            setTimeout(() => {
-                this.addInitialChatDisabledIndicator();
-            }, 500);
-            
             // Set up periodic checks to ensure chat state is correct
             setInterval(() => {
                 this.ensureCorrectChatState();
@@ -42,51 +37,7 @@ class TeamsAuthManager {
         }
     }
     
-    /**
-     * Add initial chat disabled indicator
-     */
-    addInitialChatDisabledIndicator() {
-        try {
-            const chatContainer = document.querySelector('.chat-container');
-            if (chatContainer && !document.querySelector('.chat-disabled-overlay')) {
-                const disabledOverlay = document.createElement('div');
-                disabledOverlay.className = 'chat-disabled-overlay initial';
-                disabledOverlay.style.cssText = `
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(108, 117, 125, 0.1);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 100;
-                    pointer-events: none;
-                `;
-                disabledOverlay.innerHTML = `
-                    <div style="
-                        background: #fff3cd;
-                        border: 1px solid #ffeaa7;
-                        border-radius: 8px;
-                        padding: 15px;
-                        text-align: center;
-                        color: #856404;
-                        font-size: 14px;
-                        pointer-events: auto;
-                    ">
-                        <i class="fas fa-clock" style="font-size: 18px; margin-bottom: 8px; display: block;"></i>
-                        Chat is disabled - Please authenticate to continue
-                    </div>
-                `;
-                chatContainer.style.position = 'relative';
-                chatContainer.appendChild(disabledOverlay);
-                console.log('✅ Initial chat disabled overlay added');
-            }
-        } catch (error) {
-            console.error('Error adding initial chat disabled indicator:', error);
-        }
-    }
+
     
     /**
      * Initialize Microsoft Teams SDK
