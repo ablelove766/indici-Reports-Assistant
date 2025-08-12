@@ -348,13 +348,17 @@ class TeamsAuthManager {
 
                 const userInfo = document.createElement('div');
                 userInfo.className = 'user-info';
+                
+                // Prioritize Azure AD email from Teams authentication
+                const azureADEmail = user.userPrincipalName || user.email || user.preferred_username || user.mail || '';
+                
                 userInfo.innerHTML = `
                     <div class="user-avatar">
                         <i class="fas fa-user-circle"></i>
                     </div>
                     <div class="user-details">
                         <div class="user-name">${user.displayName || 'User'}</div>
-                        <div class="user-email">${user.mail || user.userPrincipalName || ''}</div>
+                        <div class="user-email">${azureADEmail}</div>
                     </div>
                 `;
 
@@ -405,7 +409,12 @@ class TeamsAuthManager {
                 
                 // Use AD full name if available, otherwise fall back to display name
                 const fullName = adData.fullName || this.currentUser.displayName || 'User';
-                const email = adData.email || this.currentUser.email || this.currentUser.userPrincipalName || '';
+                
+                // Prioritize Azure AD email from currentUser (Teams authentication)
+                const azureADEmail = this.currentUser?.userPrincipalName || this.currentUser?.email || this.currentUser?.preferred_username || '';
+                const adEmail = adData.email || '';
+                const email = azureADEmail || adEmail || '';
+                
                 const practiceCount = adData.practiceCount || 0;
                 
                 userInfo.innerHTML = `
@@ -418,6 +427,8 @@ class TeamsAuthManager {
                         <div class="user-practices">${practiceCount} practice(s) available</div>
                     </div>
                 `;
+                
+                console.log('🔍 [TeamsAuth] Sidebar email sources - Azure AD:', azureADEmail, 'AD:', adEmail, 'Final:', email);
 
                 // Insert before version info
                 const versionElement = sidebarFooter.querySelector('.version');
@@ -459,10 +470,15 @@ class TeamsAuthManager {
                 return;
             }
             
-            // Get user details from AD data
+            // Get user details from AD data - prioritize Azure AD email
             const fullName = adData.fullName || this.currentUser.displayName || 'User';
             const profileType = adData.profileType || 'User';
-            const email = adData.email || this.currentUser.email || this.currentUser.userPrincipalName || '';
+            
+            // Prioritize Azure AD email from currentUser (Teams authentication)
+            const azureADEmail = this.currentUser?.userPrincipalName || this.currentUser?.email || this.currentUser?.preferred_username || '';
+            const adEmail = adData.email || '';
+            const email = azureADEmail || adEmail || '';
+            
             const practices = adData.practices || [];
             
             // Get practice name - prioritize primary practice
@@ -484,6 +500,7 @@ class TeamsAuthManager {
             if (userEmailElement) {
                 userEmailElement.textContent = email;
                 console.log('✅ Updated header user email:', email);
+                console.log('🔍 [TeamsAuth] Email sources - Azure AD:', azureADEmail, 'AD:', adEmail, 'Final:', email);
             }
             
             // Update auth status indicator to show success
