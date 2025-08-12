@@ -26,8 +26,65 @@ class TeamsAuthManager {
             // Initially disable message input until user is authenticated
             this.disableMessageInput();
             console.log('✅ [TeamsAuth] Message input state initialized - disabled until authentication');
+            
+            // Also add a visual indicator that chat is disabled initially
+            setTimeout(() => {
+                this.addInitialChatDisabledIndicator();
+            }, 500);
+            
+            // Set up periodic checks to ensure chat state is correct
+            setInterval(() => {
+                this.ensureCorrectChatState();
+            }, 5000); // Check every 5 seconds
+            
         } catch (error) {
             console.error('Error initializing message input state:', error);
+        }
+    }
+    
+    /**
+     * Add initial chat disabled indicator
+     */
+    addInitialChatDisabledIndicator() {
+        try {
+            const chatContainer = document.querySelector('.chat-container');
+            if (chatContainer && !document.querySelector('.chat-disabled-overlay')) {
+                const disabledOverlay = document.createElement('div');
+                disabledOverlay.className = 'chat-disabled-overlay initial';
+                disabledOverlay.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(108, 117, 125, 0.1);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 100;
+                    pointer-events: none;
+                `;
+                disabledOverlay.innerHTML = `
+                    <div style="
+                        background: #fff3cd;
+                        border: 1px solid #ffeaa7;
+                        border-radius: 8px;
+                        padding: 15px;
+                        text-align: center;
+                        color: #856404;
+                        font-size: 14px;
+                        pointer-events: auto;
+                    ">
+                        <i class="fas fa-clock" style="font-size: 18px; margin-bottom: 8px; display: block;"></i>
+                        Chat is disabled - Please authenticate to continue
+                    </div>
+                `;
+                chatContainer.style.position = 'relative';
+                chatContainer.appendChild(disabledOverlay);
+                console.log('✅ Initial chat disabled overlay added');
+            }
+        } catch (error) {
+            console.error('Error adding initial chat disabled indicator:', error);
         }
     }
     
@@ -212,7 +269,15 @@ class TeamsAuthManager {
                     console.error('🔧 [TeamsAuth] Please grant admin consent in Azure Portal');
                 }
 
-                this.handleAuthFailure(errorData);
+                // If this is an AD login failure, show the specific error and disable chat
+                if (response.status === 401 || response.status === 403 || 
+                    (errorData.error && (errorData.error.includes('AD') || errorData.error.includes('indici')))) {
+                    console.log('🚨 [TeamsAuth] AD login failure detected - disabling chat and showing error');
+                    this.showADLoginError();
+                } else {
+                    this.handleAuthFailure(errorData);
+                }
+                
                 return false;
             }
 
@@ -522,6 +587,8 @@ class TeamsAuthManager {
      */
     showADLoginError() {
         try {
+            console.log('🚨 [TeamsAuth] showADLoginError called - starting to disable chat...');
+            
             // Remove any existing error
             const existingError = document.querySelector('.ad-login-error');
             if (existingError) {
@@ -529,6 +596,7 @@ class TeamsAuthManager {
             }
             
             // Completely disable message input and add visual overlay
+            console.log('🔒 [TeamsAuth] Calling forceDisableMessageInput...');
             this.forceDisableMessageInput();
             
             const errorContainer = document.createElement('div');
@@ -558,7 +626,7 @@ class TeamsAuthManager {
                 <div style="color: #856404; font-size: 12px; margin-bottom: 15px;">
                     Please contact your indici administrator to register your account.
                 </div>
-                <button onclick="this.handleADLoginErrorClose()" style="
+                <button id="ad-login-close-btn" style="
                     background: #856404;
                     color: white;
                     border: none;
@@ -570,10 +638,71 @@ class TeamsAuthManager {
             `;
             
             document.body.appendChild(errorContainer);
+            
+            // Add event listener to the close button
+            const closeButton = document.getElementById('ad-login-close-btn');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    this.handleADLoginErrorClose();
+                });
+            }
+            
             console.log('⚠️ AD login error displayed - message input disabled');
+            
+            // Verify that elements are actually disabled
+            setTimeout(() => {
+                this.verifyChatDisabled();
+            }, 100);
             
         } catch (error) {
             console.error('Error showing AD login error:', error);
+        }
+    }
+    
+    /**
+     * Verify that chat is properly disabled
+     */
+    verifyChatDisabled() {
+        try {
+            console.log('🔍 [TeamsAuth] Verifying chat disabled state...');
+            
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            
+            if (messageInput) {
+                console.log('📝 Message input state:', {
+                    disabled: messageInput.disabled,
+                    readonly: messageInput.hasAttribute('readonly'),
+                    opacity: messageInput.style.opacity,
+                    cursor: messageInput.style.cursor,
+                    backgroundColor: messageInput.style.backgroundColor,
+                    placeholder: messageInput.placeholder
+                });
+            } else {
+                console.log('❌ Message input element not found!');
+            }
+            
+            if (sendButton) {
+                console.log('📤 Send button state:', {
+                    disabled: sendButton.disabled,
+                    opacity: sendButton.style.opacity,
+                    cursor: sendButton.style.cursor,
+                    backgroundColor: sendButton.style.backgroundColor
+                });
+            } else {
+                console.log('❌ Send button element not found!');
+            }
+            
+            // Check if overlay is present
+            const overlay = document.querySelector('.chat-disabled-overlay');
+            if (overlay) {
+                console.log('✅ Chat disabled overlay is present');
+            } else {
+                console.log('❌ Chat disabled overlay not found');
+            }
+            
+        } catch (error) {
+            console.error('Error verifying chat disabled state:', error);
         }
     }
     
@@ -603,6 +732,8 @@ class TeamsAuthManager {
      */
     disableMessageInput() {
         try {
+            console.log('🔒 [TeamsAuth] Attempting to disable message input...');
+            
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
             
@@ -616,6 +747,11 @@ class TeamsAuthManager {
                 messageInput.style.color = '#6c757d';
                 messageInput.setAttribute('readonly', 'readonly');
                 console.log('✅ Message input disabled');
+            } else {
+                console.log('❌ Message input element not found - will retry in 1 second');
+                // Retry after a short delay in case DOM is not ready
+                setTimeout(() => this.disableMessageInput(), 1000);
+                return;
             }
             
             if (sendButton) {
@@ -625,6 +761,11 @@ class TeamsAuthManager {
                 sendButton.style.backgroundColor = '#6c757d';
                 sendButton.title = 'Chat disabled - user not registered';
                 console.log('✅ Send button disabled');
+            } else {
+                console.log('❌ Send button element not found - will retry in 1 second');
+                // Retry after a short delay in case DOM is not ready
+                setTimeout(() => this.disableMessageInput(), 1000);
+                return;
             }
             
             // Also disable any Enter key functionality
@@ -660,6 +801,37 @@ class TeamsAuthManager {
         const sendButton = document.getElementById('send-button');
         
         return messageInput?.disabled === true || sendButton?.disabled === true;
+    }
+    
+    /**
+     * Check if chat should be disabled based on authentication state
+     */
+    shouldChatBeDisabled() {
+        // Chat should be disabled if:
+        // 1. User is not authenticated, OR
+        // 2. User is authenticated but not registered in indici system
+        return !this.currentUser || !this.currentUser.ad_data;
+    }
+    
+    /**
+     * Ensure chat is in correct state based on authentication
+     */
+    ensureCorrectChatState() {
+        try {
+            if (this.shouldChatBeDisabled()) {
+                console.log('🔒 [TeamsAuth] Chat should be disabled - ensuring disabled state');
+                if (!this.isMessageInputDisabled()) {
+                    this.disableMessageInput();
+                }
+            } else {
+                console.log('🔓 [TeamsAuth] Chat should be enabled - ensuring enabled state');
+                if (this.isMessageInputDisabled()) {
+                    this.enableMessageInput();
+                }
+            }
+        } catch (error) {
+            console.error('Error ensuring correct chat state:', error);
+        }
     }
     
     /**
@@ -763,11 +935,12 @@ class TeamsAuthManager {
      */
     removeChatDisabledOverlay() {
         try {
-            const disabledOverlay = document.querySelector('.chat-disabled-overlay');
-            if (disabledOverlay) {
-                disabledOverlay.remove();
-                console.log('✅ Chat disabled overlay removed');
-            }
+            // Remove all chat disabled overlays (both initial and regular)
+            const disabledOverlays = document.querySelectorAll('.chat-disabled-overlay');
+            disabledOverlays.forEach(overlay => {
+                overlay.remove();
+                console.log('✅ Chat disabled overlay removed:', overlay.className);
+            });
         } catch (error) {
             console.error('Error removing chat disabled overlay:', error);
         }
