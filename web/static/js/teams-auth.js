@@ -528,8 +528,8 @@ class TeamsAuthManager {
                 existingError.remove();
             }
             
-            // Disable message input and send button
-            this.disableMessageInput();
+            // Completely disable message input and add visual overlay
+            this.forceDisableMessageInput();
             
             const errorContainer = document.createElement('div');
             errorContainer.className = 'ad-login-error';
@@ -611,6 +611,10 @@ class TeamsAuthManager {
                 messageInput.placeholder = 'User not registered - contact administrator';
                 messageInput.style.opacity = '0.6';
                 messageInput.style.cursor = 'not-allowed';
+                messageInput.style.backgroundColor = '#f8f9fa';
+                messageInput.style.borderColor = '#dee2e6';
+                messageInput.style.color = '#6c757d';
+                messageInput.setAttribute('readonly', 'readonly');
                 console.log('✅ Message input disabled');
             }
             
@@ -618,11 +622,94 @@ class TeamsAuthManager {
                 sendButton.disabled = true;
                 sendButton.style.opacity = '0.6';
                 sendButton.style.cursor = 'not-allowed';
+                sendButton.style.backgroundColor = '#6c757d';
+                sendButton.title = 'Chat disabled - user not registered';
                 console.log('✅ Send button disabled');
             }
             
+            // Also disable any Enter key functionality
+            if (messageInput) {
+                messageInput.removeEventListener('keypress', this.handleEnterKey);
+                messageInput.addEventListener('keypress', this.handleEnterKeyDisabled);
+            }
+            
+            console.log('🔒 Chat functionality completely disabled - user not registered');
+            
         } catch (error) {
             console.error('Error disabling message input:', error);
+        }
+    }
+    
+    /**
+     * Handle Enter key when input is disabled
+     */
+    handleEnterKeyDisabled(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log('⚠️ Enter key blocked - chat is disabled');
+            return false;
+        }
+    }
+    
+    /**
+     * Check if message input is currently disabled
+     */
+    isMessageInputDisabled() {
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        
+        return messageInput?.disabled === true || sendButton?.disabled === true;
+    }
+    
+    /**
+     * Force disable message input (for emergency cases)
+     */
+    forceDisableMessageInput() {
+        try {
+            console.log('🚨 Force disabling message input...');
+            this.disableMessageInput();
+            
+            // Add a visual indicator that chat is completely disabled
+            const chatContainer = document.querySelector('.chat-container');
+            if (chatContainer) {
+                const disabledOverlay = document.createElement('div');
+                disabledOverlay.className = 'chat-disabled-overlay';
+                disabledOverlay.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(108, 117, 125, 0.1);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 100;
+                    pointer-events: none;
+                `;
+                disabledOverlay.innerHTML = `
+                    <div style="
+                        background: #fff3cd;
+                        border: 1px solid #ffeaa7;
+                        border-radius: 8px;
+                        padding: 15px;
+                        text-align: center;
+                        color: #856404;
+                        font-size: 14px;
+                        pointer-events: auto;
+                    ">
+                        <i class="fas fa-ban" style="font-size: 18px; margin-bottom: 8px; display: block;"></i>
+                        Chat is disabled - User not registered
+                    </div>
+                `;
+                chatContainer.style.position = 'relative';
+                chatContainer.appendChild(disabledOverlay);
+                console.log('✅ Chat disabled overlay added');
+            }
+            
+        } catch (error) {
+            console.error('Error force disabling message input:', error);
         }
     }
     
@@ -639,6 +726,10 @@ class TeamsAuthManager {
                 messageInput.placeholder = 'Ask me about indici Reports...';
                 messageInput.style.opacity = '1';
                 messageInput.style.cursor = 'text';
+                messageInput.style.backgroundColor = '';
+                messageInput.style.borderColor = '';
+                messageInput.style.color = '';
+                messageInput.removeAttribute('readonly');
                 console.log('✅ Message input re-enabled');
             }
             
@@ -646,11 +737,39 @@ class TeamsAuthManager {
                 sendButton.disabled = false;
                 sendButton.style.opacity = '1';
                 sendButton.style.cursor = 'pointer';
+                sendButton.style.backgroundColor = '';
+                sendButton.title = '';
                 console.log('✅ Send button re-enabled');
             }
             
+            // Restore Enter key functionality
+            if (messageInput) {
+                messageInput.removeEventListener('keypress', this.handleEnterKeyDisabled);
+                // Note: The original Enter key handler should be restored by the main app
+            }
+            
+            // Remove any disabled overlay
+            this.removeChatDisabledOverlay();
+            
+            console.log('🔓 Chat functionality re-enabled');
+            
         } catch (error) {
             console.error('Error enabling message input:', error);
+        }
+    }
+    
+    /**
+     * Remove chat disabled overlay
+     */
+    removeChatDisabledOverlay() {
+        try {
+            const disabledOverlay = document.querySelector('.chat-disabled-overlay');
+            if (disabledOverlay) {
+                disabledOverlay.remove();
+                console.log('✅ Chat disabled overlay removed');
+            }
+        } catch (error) {
+            console.error('Error removing chat disabled overlay:', error);
         }
     }
     
