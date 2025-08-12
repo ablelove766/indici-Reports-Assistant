@@ -175,6 +175,10 @@ class TeamsAuthManager {
                     
                     // Update UI with AD user information
                     this.updateUIWithADData(data.ad_data);
+                } else {
+                    console.log('⚠️ [TeamsAuth] No AD data received - user may not be registered in indici');
+                    // Show error message for unregistered user
+                    this.showADLoginError();
                 }
 
                 // Notify authentication success
@@ -408,6 +412,9 @@ class TeamsAuthManager {
                 headerInfo.textContent = `Welcome, ${fullName}! Your intelligent assistant for indici Reports`;
             }
             
+            // Show practice name and email in top right corner
+            this.showUserInfoInTopRight(adData);
+            
             // Display practice information if available
             if (adData.practices && adData.practices.length > 0) {
                 this.displayPracticeInfo(adData.practices);
@@ -415,6 +422,114 @@ class TeamsAuthManager {
             
         } catch (error) {
             console.error('Error updating UI with AD data:', error);
+        }
+    }
+    
+    /**
+     * Show user info (practice name + email) in top right corner
+     */
+    showUserInfoInTopRight(adData) {
+        try {
+            // Remove any existing top right user info
+            const existingTopRight = document.querySelector('.top-right-user-info');
+            if (existingTopRight) {
+                existingTopRight.remove();
+            }
+            
+            const email = adData.email || this.currentUser.email || this.currentUser.userPrincipalName || '';
+            const practices = adData.practices || [];
+            
+            // Get primary practice name or first practice name
+            let practiceName = 'No Practice';
+            if (practices.length > 0) {
+                const primaryPractice = practices.find(p => p.isPrimary) || practices[0];
+                practiceName = primaryPractice.practiceName || 'Unknown Practice';
+            }
+            
+            const topRightInfo = document.createElement('div');
+            topRightInfo.className = 'top-right-user-info';
+            topRightInfo.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 12px 15px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 1000;
+                font-size: 14px;
+                max-width: 300px;
+                text-align: right;
+            `;
+            
+            topRightInfo.innerHTML = `
+                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">🏥 ${practiceName}</div>
+                <div style="color: #666; font-size: 12px;">${email}</div>
+            `;
+            
+            document.body.appendChild(topRightInfo);
+            console.log('✅ Added user info to top right corner:', practiceName, email);
+            
+        } catch (error) {
+            console.error('Error showing user info in top right:', error);
+        }
+    }
+    
+    /**
+     * Show error when AD login fails (user not registered in indici)
+     */
+    showADLoginError() {
+        try {
+            // Remove any existing error
+            const existingError = document.querySelector('.ad-login-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorContainer = document.createElement('div');
+            errorContainer.className = 'ad-login-error';
+            errorContainer.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                z-index: 1001;
+                max-width: 400px;
+                text-align: center;
+            `;
+            
+            errorContainer.innerHTML = `
+                <div style="color: #856404; font-size: 18px; margin-bottom: 10px;">
+                    ⚠️ User Not Registered
+                </div>
+                <div style="color: #856404; font-size: 14px; margin-bottom: 15px;">
+                    You are authenticated with Azure AD but not registered in indici system.
+                </div>
+                <div style="color: #856404; font-size: 12px; margin-bottom: 15px;">
+                    Please contact your indici administrator to register your account.
+                </div>
+                <button onclick="this.parentElement.remove()" style="
+                    background: #856404;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">Close</button>
+            `;
+            
+            document.body.appendChild(errorContainer);
+            console.log('⚠️ AD login error displayed');
+            
+        } catch (error) {
+            console.error('Error showing AD login error:', error);
         }
     }
     
