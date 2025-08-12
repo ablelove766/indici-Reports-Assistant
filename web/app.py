@@ -393,6 +393,7 @@ def verify_auth():
                     "firstName": ad_user.get('firstName'),
                     "familyName": ad_user.get('familyName'),
                     "email": ad_user.get('email'),
+                    "profileType": ad_user.get('profileType'),
                     "practices": practices,
                     "practiceCount": len(practices)
                 }
@@ -638,6 +639,7 @@ def token_exchange():
                 "firstName": ad_user.get('firstName'),
                 "familyName": ad_user.get('familyName'),
                 "email": ad_user.get('email'),
+                "profileType": ad_user.get('profileType'),
                 "practices": practices,
                 "practiceCount": len(practices)
             }

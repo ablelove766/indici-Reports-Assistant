@@ -415,10 +415,7 @@ class TeamsAuthManager {
             // Show practice name and email in top right corner
             this.showUserInfoInTopRight(adData);
             
-            // Display practice information if available
-            if (adData.practices && adData.practices.length > 0) {
-                this.displayPracticeInfo(adData.practices);
-            }
+            // Note: Removed practice info modal display - practice name now shown in top right corner
             
         } catch (error) {
             console.error('Error updating UI with AD data:', error);
@@ -440,11 +437,15 @@ class TeamsAuthManager {
             const practices = adData.practices || [];
             
             // Get primary practice name or first practice name
-            let practiceName = 'No Practice';
+            let practiceName = 'Victoria Clinic'; // Default practice name
             if (practices.length > 0) {
                 const primaryPractice = practices.find(p => p.isPrimary) || practices[0];
-                practiceName = primaryPractice.practiceName || 'Unknown Practice';
+                practiceName = primaryPractice.practiceName || 'Victoria Clinic';
             }
+            
+            // Get user full name and profile type
+            const fullName = adData.fullName || this.currentUser.displayName || 'User';
+            const profileType = adData.profileType || 'User'; // Get profile type from AD data
             
             const topRightInfo = document.createElement('div');
             topRightInfo.className = 'top-right-user-info';
@@ -459,17 +460,17 @@ class TeamsAuthManager {
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 z-index: 1000;
                 font-size: 14px;
-                max-width: 300px;
+                max-width: 350px;
                 text-align: right;
             `;
             
             topRightInfo.innerHTML = `
-                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">🏥 ${practiceName}</div>
+                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">${fullName} (${profileType}) - ${practiceName}</div>
                 <div style="color: #666; font-size: 12px;">${email}</div>
             `;
             
             document.body.appendChild(topRightInfo);
-            console.log('✅ Added user info to top right corner:', practiceName, email);
+            console.log('✅ Added user info to top right corner:', fullName, profileType, practiceName, email);
             
         } catch (error) {
             console.error('Error showing user info in top right:', error);
