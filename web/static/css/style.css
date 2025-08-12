@@ -985,6 +985,19 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+#message-input:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.6;
+    border-color: var(--border-color);
+}
+
+#message-input:disabled::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
 #send-button {
     width: 48px;
     height: 48px;

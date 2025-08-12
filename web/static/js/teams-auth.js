@@ -13,6 +13,22 @@ class TeamsAuthManager {
         
         // Initialize Teams SDK
         this.initializeTeamsSDK();
+        
+        // Initialize message input state
+        this.initializeMessageInputState();
+    }
+    
+    /**
+     * Initialize message input state
+     */
+    initializeMessageInputState() {
+        try {
+            // Initially disable message input until user is authenticated
+            this.disableMessageInput();
+            console.log('✅ [TeamsAuth] Message input state initialized - disabled until authentication');
+        } catch (error) {
+            console.error('Error initializing message input state:', error);
+        }
     }
     
     /**
@@ -214,6 +230,9 @@ class TeamsAuthManager {
     handleAuthFailure(error) {
         console.warn('🔐 Authentication failed:', error);
 
+        // Disable message input on authentication failure
+        this.disableMessageInput();
+
         // Check if we're in Teams mode and should redirect to auth error page
         if (document.body.classList.contains('teams-mode')) {
             console.log('🔐 Teams mode detected, checking if redirect is needed...');
@@ -314,6 +333,9 @@ class TeamsAuthManager {
      */
     updateUIForAuthenticatedUser(user) {
         try {
+            // Enable message input since user is authenticated
+            this.enableMessageInput();
+            
             // Update sidebar with user info
             const sidebarFooter = document.querySelector('.sidebar-footer');
             if (sidebarFooter) {
@@ -365,6 +387,9 @@ class TeamsAuthManager {
         try {
             console.log('🔄 [TeamsAuth] Updating UI with AD data:', adData);
             
+            // Enable message input since user is now authenticated
+            this.enableMessageInput();
+            
             // Update sidebar with enhanced user info
             const sidebarFooter = document.querySelector('.sidebar-footer');
             if (sidebarFooter) {
@@ -415,10 +440,7 @@ class TeamsAuthManager {
             // Update header user info display with AD login format
             this.updateHeaderUserInfo(adData);
             
-            // Show practice name and email in top right corner
-            this.showUserInfoInTopRight(adData);
-            
-            // Note: Removed practice info modal display - practice name now shown in top right corner
+            // Note: Top right user info is now updated by updateHeaderUserInfo method
             
         } catch (error) {
             console.error('Error updating UI with AD data:', error);
@@ -445,14 +467,14 @@ class TeamsAuthManager {
             const email = adData.email || this.currentUser.email || this.currentUser.userPrincipalName || '';
             const practices = adData.practices || [];
             
-            // Get practice name
-            let practiceName = 'Victoria Clinic';
-            if (practices.length > 0) {
+            // Get practice name - prioritize primary practice
+            let practiceName = 'No Practice';
+            if (practices && practices.length > 0) {
                 const primaryPractice = practices.find(p => p.isPrimary) || practices[0];
-                practiceName = primaryPractice.practiceName || 'Victoria Clinic';
+                practiceName = primaryPractice.practiceName || 'Unknown Practice';
             }
             
-            // Update the user name display with AD format
+            // Update the user name display with AD format: FullName (ProfileType) - PracticeName
             const userNameElement = userInfoDisplay.querySelector('.user-name');
             if (userNameElement) {
                 userNameElement.textContent = `${fullName} (${profileType}) - ${practiceName}`;
@@ -472,6 +494,9 @@ class TeamsAuthManager {
                 authStatusIndicator.innerHTML = '<i class="fas fa-check-circle" title="AD Authenticated"></i>';
                 console.log('✅ Updated auth status indicator');
             }
+            
+            // Also update the top right corner display with the same format
+            this.showUserInfoInTopRight(adData);
             
         } catch (error) {
             console.error('Error updating header user info:', error);
@@ -493,10 +518,10 @@ class TeamsAuthManager {
             const practices = adData.practices || [];
             
             // Get primary practice name or first practice name
-            let practiceName = 'Victoria Clinic'; // Default practice name
-            if (practices.length > 0) {
+            let practiceName = 'No Practice'; // Default practice name
+            if (practices && practices.length > 0) {
                 const primaryPractice = practices.find(p => p.isPrimary) || practices[0];
-                practiceName = primaryPractice.practiceName || 'Victoria Clinic';
+                practiceName = primaryPractice.practiceName || 'Unknown Practice';
             }
             
             // Get user full name and profile type
@@ -544,6 +569,9 @@ class TeamsAuthManager {
                 existingError.remove();
             }
             
+            // Disable message input and send button
+            this.disableMessageInput();
+            
             const errorContainer = document.createElement('div');
             errorContainer.className = 'ad-login-error';
             errorContainer.style.cssText = `
@@ -571,7 +599,7 @@ class TeamsAuthManager {
                 <div style="color: #856404; font-size: 12px; margin-bottom: 15px;">
                     Please contact your indici administrator to register your account.
                 </div>
-                <button onclick="this.parentElement.remove()" style="
+                <button onclick="this.handleADLoginErrorClose()" style="
                     background: #856404;
                     color: white;
                     border: none;
@@ -583,10 +611,87 @@ class TeamsAuthManager {
             `;
             
             document.body.appendChild(errorContainer);
-            console.log('⚠️ AD login error displayed');
+            console.log('⚠️ AD login error displayed - message input disabled');
             
         } catch (error) {
             console.error('Error showing AD login error:', error);
+        }
+    }
+    
+    /**
+     * Handle closing of AD login error modal
+     */
+    handleADLoginErrorClose() {
+        try {
+            // Remove the error modal
+            const existingError = document.querySelector('.ad-login-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Re-enable message input
+            this.enableMessageInput();
+            
+            console.log('✅ AD login error closed - message input re-enabled');
+            
+        } catch (error) {
+            console.error('Error handling AD login error close:', error);
+        }
+    }
+    
+    /**
+     * Disable message input and send button
+     */
+    disableMessageInput() {
+        try {
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            
+            if (messageInput) {
+                messageInput.disabled = true;
+                messageInput.placeholder = 'User not registered - contact administrator';
+                messageInput.style.opacity = '0.6';
+                messageInput.style.cursor = 'not-allowed';
+                console.log('✅ Message input disabled');
+            }
+            
+            if (sendButton) {
+                sendButton.disabled = true;
+                sendButton.style.opacity = '0.6';
+                sendButton.style.cursor = 'not-allowed';
+                console.log('✅ Send button disabled');
+            }
+            
+        } catch (error) {
+            console.error('Error disabling message input:', error);
+        }
+    }
+    
+    /**
+     * Enable message input and send button
+     */
+    enableMessageInput() {
+        try {
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            
+            if (messageInput) {
+                messageInput.disabled = false;
+                messageInput.placeholder = 'Ask me about indici Reports...';
+                messageInput.style.opacity = '1';
+                messageInput.style.cursor = 'text';
+                console.log('✅ Message input re-enabled');
+            }
+            
+            if (sendButton) {
+                sendButton.disabled = false;
+                sendButton.style.opacity = '1';
+                sendButton.style.cursor = 'pointer';
+                console.log('✅ Send button re-enabled');
+            }
+            
+        } catch (error) {
+            console.error('Error enabling message input:', error);
         }
     }
     
