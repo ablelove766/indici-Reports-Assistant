@@ -727,6 +727,7 @@ body[data-teams-theme="dark"] .chat-message.assistant {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 250px; /* Increased to accommodate longer AD format */
 }
 
 .user-email {

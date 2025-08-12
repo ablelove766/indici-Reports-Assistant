@@ -412,6 +412,9 @@ class TeamsAuthManager {
                 headerInfo.textContent = `Welcome, ${fullName}! Your intelligent assistant for indici Reports`;
             }
             
+            // Update header user info display with AD login format
+            this.updateHeaderUserInfo(adData);
+            
             // Show practice name and email in top right corner
             this.showUserInfoInTopRight(adData);
             
@@ -419,6 +422,59 @@ class TeamsAuthManager {
             
         } catch (error) {
             console.error('Error updating UI with AD data:', error);
+        }
+    }
+    
+    /**
+     * Update header user info display with AD login format
+     */
+    updateHeaderUserInfo(adData) {
+        try {
+            console.log('🔄 [TeamsAuth] Updating header user info with AD data:', adData);
+            
+            // Find the user info display in the header
+            const userInfoDisplay = document.querySelector('.user-info-display');
+            if (!userInfoDisplay) {
+                console.log('⚠️ [TeamsAuth] Header user info display not found');
+                return;
+            }
+            
+            // Get user details from AD data
+            const fullName = adData.fullName || this.currentUser.displayName || 'User';
+            const profileType = adData.profileType || 'User';
+            const email = adData.email || this.currentUser.email || this.currentUser.userPrincipalName || '';
+            const practices = adData.practices || [];
+            
+            // Get practice name
+            let practiceName = 'Victoria Clinic';
+            if (practices.length > 0) {
+                const primaryPractice = practices.find(p => p.isPrimary) || practices[0];
+                practiceName = primaryPractice.practiceName || 'Victoria Clinic';
+            }
+            
+            // Update the user name display with AD format
+            const userNameElement = userInfoDisplay.querySelector('.user-name');
+            if (userNameElement) {
+                userNameElement.textContent = `${fullName} (${profileType}) - ${practiceName}`;
+                console.log('✅ Updated header user name:', userNameElement.textContent);
+            }
+            
+            // Update the user email display
+            const userEmailElement = userInfoDisplay.querySelector('.user-email');
+            if (userEmailElement) {
+                userEmailElement.textContent = email;
+                console.log('✅ Updated header user email:', email);
+            }
+            
+            // Update auth status indicator to show success
+            const authStatusIndicator = userInfoDisplay.querySelector('.auth-status-indicator');
+            if (authStatusIndicator) {
+                authStatusIndicator.innerHTML = '<i class="fas fa-check-circle" title="AD Authenticated"></i>';
+                console.log('✅ Updated auth status indicator');
+            }
+            
+        } catch (error) {
+            console.error('Error updating header user info:', error);
         }
     }
     
