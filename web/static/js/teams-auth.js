@@ -440,8 +440,6 @@ class TeamsAuthManager {
             // Update header user info display with AD login format
             this.updateHeaderUserInfo(adData);
             
-            // Note: Top right user info is now updated by updateHeaderUserInfo method
-            
         } catch (error) {
             console.error('Error updating UI with AD data:', error);
         }
@@ -495,68 +493,12 @@ class TeamsAuthManager {
                 console.log('✅ Updated auth status indicator');
             }
             
-            // Also update the top right corner display with the same format
-            this.showUserInfoInTopRight(adData);
-            
         } catch (error) {
             console.error('Error updating header user info:', error);
         }
     }
     
-    /**
-     * Show user info (practice name + email) in top right corner
-     */
-    showUserInfoInTopRight(adData) {
-        try {
-            // Remove any existing top right user info
-            const existingTopRight = document.querySelector('.top-right-user-info');
-            if (existingTopRight) {
-                existingTopRight.remove();
-            }
-            
-            const email = adData.email || this.currentUser.email || this.currentUser.userPrincipalName || '';
-            const practices = adData.practices || [];
-            
-            // Get primary practice name or first practice name
-            let practiceName = 'No Practice'; // Default practice name
-            if (practices && practices.length > 0) {
-                const primaryPractice = practices.find(p => p.isPrimary) || practices[0];
-                practiceName = primaryPractice.practiceName || 'Unknown Practice';
-            }
-            
-            // Get user full name and profile type
-            const fullName = adData.fullName || this.currentUser.displayName || 'User';
-            const profileType = adData.profileType || 'User'; // Get profile type from AD data
-            
-            const topRightInfo = document.createElement('div');
-            topRightInfo.className = 'top-right-user-info';
-            topRightInfo.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: white;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 12px 15px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                z-index: 1000;
-                font-size: 14px;
-                max-width: 350px;
-                text-align: right;
-            `;
-            
-            topRightInfo.innerHTML = `
-                <div style="font-weight: bold; color: #333; margin-bottom: 4px;">${fullName} (${profileType}) - ${practiceName}</div>
-                <div style="color: #666; font-size: 12px;">${email}</div>
-            `;
-            
-            document.body.appendChild(topRightInfo);
-            console.log('✅ Added user info to top right corner:', fullName, profileType, practiceName, email);
-            
-        } catch (error) {
-            console.error('Error showing user info in top right:', error);
-        }
-    }
+
     
     /**
      * Show error when AD login fails (user not registered in indici)
