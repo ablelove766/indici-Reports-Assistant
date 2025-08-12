@@ -460,6 +460,42 @@ class TeamsAuthManager:
             logger.error(f"Error getting user info: {e}")
             return None
 
+    async def ad_login_user(self, username: str) -> Optional[Dict[str, Any]]:
+        """
+        Call the AD login endpoint to get user profile and practice information.
+        
+        Args:
+            username: User's email/username from Teams authentication
+            
+        Returns:
+            Dictionary containing user profile, practices, and other AD data
+        """
+        try:
+            sso_logger.info(f"[AD_LOGIN] Attempting AD login for user: {username}")
+            
+            # Import the MCP tools
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from mcp_server.tools import indici_tools
+            
+            # Call the AD login endpoint
+            result = await indici_tools.ad_login(username)
+            
+            if result.get("success", False) and result.get("data"):
+                ad_data = result["data"]
+                sso_logger.info(f"[AD_LOGIN] AD login successful for user: {username}")
+                sso_logger.info(f"[AD_LOGIN] User full name: {ad_data.get('user', {}).get('fullName', 'Unknown')}")
+                sso_logger.info(f"[AD_LOGIN] Practice count: {len(ad_data.get('practices', []))}")
+                return ad_data
+            else:
+                sso_logger.warning(f"[AD_LOGIN] AD login failed for user {username}: {result.get('error', 'Unknown error')}")
+                return None
+                
+        except Exception as e:
+            sso_logger.error(f"[AD_LOGIN] Exception during AD login for user {username}: {str(e)}")
+            return None
+
 # Global authentication manager instance
 auth_manager = TeamsAuthManager()
 

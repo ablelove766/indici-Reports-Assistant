@@ -349,7 +349,28 @@ def verify_auth():
             logger.info(f"[AUTH] Available token fields: {list(user_payload.keys())}")
             logger.info(f"[AUTH] Extracted name: '{user_name}', email: '{user_email}'")
 
-            return jsonify({
+            # Call AD login endpoint to get user profile and practice information
+            logger.info("[AUTH] Calling AD login endpoint...")
+            if user_email:
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                ad_data = loop.run_until_complete(auth_manager.ad_login_user(user_email))
+                loop.close()
+                
+                if ad_data:
+                    logger.info(f"[AUTH] AD login successful for user: {user_email}")
+                    # Store AD data in session
+                    session['ad_data'] = ad_data
+                else:
+                    logger.warning(f"[AUTH] AD login failed for user: {user_email}")
+                    ad_data = None
+            else:
+                logger.warning("[AUTH] No email available for AD login")
+                ad_data = None
+
+            # Prepare response data
+            response_data = {
                 "authenticated": True,
                 "user": {
                     "name": user_name,
@@ -361,7 +382,22 @@ def verify_auth():
                 },
                 "success": True,
                 "session_stored": True
-            })
+            }
+            
+            # Add AD data if available
+            if ad_data:
+                ad_user = ad_data.get('user', {})
+                practices = ad_data.get('practices', [])
+                response_data["ad_data"] = {
+                    "fullName": ad_user.get('fullName'),
+                    "firstName": ad_user.get('firstName'),
+                    "familyName": ad_user.get('familyName'),
+                    "email": ad_user.get('email'),
+                    "practices": practices,
+                    "practiceCount": len(practices)
+                }
+
+            return jsonify(response_data)
         else:
             return jsonify({
                 "authenticated": False,
@@ -553,6 +589,27 @@ def token_exchange():
 
         logger.info(f"✅ User info obtained: {user_info.get('displayName', 'Unknown')}")
 
+        # Call AD login endpoint to get user profile and practice information
+        logger.info("🔄 Step 4: Calling AD login endpoint...")
+        username = user_info.get('userPrincipalName') or user_info.get('mail')
+        if username:
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            ad_data = loop.run_until_complete(auth_manager.ad_login_user(username))
+            loop.close()
+            
+            if ad_data:
+                logger.info(f"✅ AD login successful for user: {username}")
+                # Store AD data in session
+                session['ad_data'] = ad_data
+            else:
+                logger.warning(f"⚠️ AD login failed for user: {username}")
+                ad_data = None
+        else:
+            logger.warning("⚠️ No username available for AD login")
+            ad_data = None
+
         # Store in session
         logger.info("💾 Storing tokens and user info in session...")
         session['access_token'] = graph_token
@@ -560,7 +617,9 @@ def token_exchange():
         session['teams_token'] = teams_token
 
         logger.info("✅ Token exchange completed successfully!")
-        return jsonify({
+        
+        # Prepare response with both Graph and AD data
+        response_data = {
             "success": True,
             "user": {
                 "id": user_info.get("id"),
@@ -568,7 +627,22 @@ def token_exchange():
                 "userPrincipalName": user_info.get("userPrincipalName"),
                 "mail": user_info.get("mail")
             }
-        })
+        }
+        
+        # Add AD data if available
+        if ad_data:
+            ad_user = ad_data.get('user', {})
+            practices = ad_data.get('practices', [])
+            response_data["ad_data"] = {
+                "fullName": ad_user.get('fullName'),
+                "firstName": ad_user.get('firstName'),
+                "familyName": ad_user.get('familyName'),
+                "email": ad_user.get('email'),
+                "practices": practices,
+                "practiceCount": len(practices)
+            }
+        
+        return jsonify(response_data)
 
     except Exception as e:
         logger.error(f"❌ Exception in token exchange: {e}")

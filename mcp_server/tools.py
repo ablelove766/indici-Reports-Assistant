@@ -707,6 +707,59 @@ class indiciAPITools:
 
         return html_output
 
+    async def ad_login(self, username: str, machine_ip: str = None) -> Dict[str, Any]:
+        """
+        Authenticate user via AD login endpoint.
+        
+        Args:
+            username: User's email/username for AD authentication
+            machine_ip: Optional machine IP address
+            
+        Returns:
+            Dictionary containing user info, practices, and other AD login data
+        """
+        try:
+            logger.info(f"Attempting AD login for user: {username}")
+            
+            # Prepare request payload
+            payload = {
+                "userName": username,
+                "machineSignature": "MCP-Teams-Integration",
+                "machineIP": machine_ip or "127.0.0.1"
+            }
+            
+            # Make request to AD login endpoint
+            async with aiohttp.ClientSession() as session:
+                url = f"{self.base_url}/api/Login/AdLogin"
+                logger.info(f"Calling AD login endpoint: {url}")
+                
+                async with session.post(
+                    url,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        logger.info(f"AD login successful for user: {username}")
+                        return data
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"AD login failed for user {username}: {response.status} - {error_text}")
+                        return {
+                            "success": False,
+                            "error": f"AD login failed: {response.status}",
+                            "details": error_text
+                        }
+                        
+        except Exception as e:
+            logger.error(f"Exception during AD login for user {username}: {str(e)}")
+            return {
+                "success": False,
+                "error": f"AD login exception: {str(e)}"
+            }
+
     def get_sample_queries(self) -> List[Dict[str, str]]:
         """Get sample queries for the chatbot interface."""
         return [

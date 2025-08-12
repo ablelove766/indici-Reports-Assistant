@@ -168,6 +168,15 @@ class TeamsAuthManager {
                 this.currentUser = data.user;
                 this.accessToken = teamsToken; // Store Teams token
 
+                // Process AD data if available
+                if (data.ad_data) {
+                    console.log('✅ [TeamsAuth] AD data received:', data.ad_data);
+                    this.currentUser.ad_data = data.ad_data;
+                    
+                    // Update UI with AD user information
+                    this.updateUIWithADData(data.ad_data);
+                }
+
                 // Notify authentication success
                 this.notifyAuthSuccess(data.user);
 
@@ -342,6 +351,141 @@ class TeamsAuthManager {
             
         } catch (error) {
             console.error('Error updating UI for authenticated user:', error);
+        }
+    }
+
+    /**
+     * Update UI with AD user information
+     */
+    updateUIWithADData(adData) {
+        try {
+            console.log('🔄 [TeamsAuth] Updating UI with AD data:', adData);
+            
+            // Update sidebar with enhanced user info
+            const sidebarFooter = document.querySelector('.sidebar-footer');
+            if (sidebarFooter) {
+                // Remove any existing user info to prevent duplicates
+                const existingUserInfo = sidebarFooter.querySelector('.user-info');
+                if (existingUserInfo) {
+                    existingUserInfo.remove();
+                    console.log('🧹 Removed existing user info from sidebar');
+                }
+
+                const userInfo = document.createElement('div');
+                userInfo.className = 'user-info';
+                
+                // Use AD full name if available, otherwise fall back to display name
+                const fullName = adData.fullName || this.currentUser.displayName || 'User';
+                const email = adData.email || this.currentUser.email || this.currentUser.userPrincipalName || '';
+                const practiceCount = adData.practiceCount || 0;
+                
+                userInfo.innerHTML = `
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">${fullName}</div>
+                        <div class="user-email">${email}</div>
+                        <div class="user-practices">${practiceCount} practice(s) available</div>
+                    </div>
+                `;
+
+                // Insert before version info
+                const versionElement = sidebarFooter.querySelector('.version');
+                if (versionElement) {
+                    sidebarFooter.insertBefore(userInfo, versionElement);
+                } else {
+                    sidebarFooter.appendChild(userInfo);
+                }
+
+                console.log('✅ Added enhanced user info to sidebar:', fullName);
+            }
+            
+            // Update header to show authenticated state with AD info
+            const headerInfo = document.querySelector('.header-info p');
+            if (headerInfo) {
+                const fullName = adData.fullName || this.currentUser.displayName || 'User';
+                headerInfo.textContent = `Welcome, ${fullName}! Your intelligent assistant for indici Reports`;
+            }
+            
+            // Display practice information if available
+            if (adData.practices && adData.practices.length > 0) {
+                this.displayPracticeInfo(adData.practices);
+            }
+            
+        } catch (error) {
+            console.error('Error updating UI with AD data:', error);
+        }
+    }
+    
+    /**
+     * Display practice information in the UI
+     */
+    displayPracticeInfo(practices) {
+        try {
+            console.log('🔄 [TeamsAuth] Displaying practice info:', practices);
+            
+            // Create practice info container
+            const practiceContainer = document.createElement('div');
+            practiceContainer.className = 'practice-info-container';
+            practiceContainer.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 1000;
+                max-width: 300px;
+                font-size: 14px;
+            `;
+            
+            let practiceHtml = '<h4 style="margin: 0 0 10px 0; color: #333;">🏥 Available Practices</h4>';
+            
+            practices.forEach((practice, index) => {
+                const isPrimary = practice.isPrimary ? ' (Primary)' : '';
+                practiceHtml += `
+                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px;">
+                        <strong>${practice.practiceName}${isPrimary}</strong><br>
+                        <small style="color: #666;">ID: ${practice.practiceID}</small>
+                    </div>
+                `;
+            });
+            
+            practiceContainer.innerHTML = practiceHtml;
+            
+            // Add close button
+            const closeButton = document.createElement('button');
+            closeButton.innerHTML = '×';
+            closeButton.style.cssText = `
+                position: absolute;
+                top: 5px;
+                right: 10px;
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                color: #666;
+            `;
+            closeButton.onclick = () => practiceContainer.remove();
+            practiceContainer.appendChild(closeButton);
+            
+            // Add to page
+            document.body.appendChild(practiceContainer);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (practiceContainer.parentNode) {
+                    practiceContainer.remove();
+                }
+            }, 10000);
+            
+            console.log('✅ Practice info displayed');
+            
+        } catch (error) {
+            console.error('Error displaying practice info:', error);
         }
     }
     

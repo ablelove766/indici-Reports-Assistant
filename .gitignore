@@ -80,6 +80,8 @@ test_*.py
 FIXES_*.md
 TEAMS_*.md
 *_VERIFICATION.md
+SSO_GUIDE_LOCAL.md
+Postman_IndiciMCP_SSO_Collection.json
 
 # Node modules (if any)
 node_modules/
